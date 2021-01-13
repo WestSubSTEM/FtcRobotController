@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
 import edu.spa.ftclib.sample.TestClass;
@@ -8,7 +9,7 @@ import edu.spa.ftclib.sample.TestClass;
 /**
  * Created by Gabriel on 2018-01-09.
  */
-
+@Disabled
 @Autonomous(name = "Test Op-Mode", group = "sample")
 
 public class TestOpMode extends OpMode {
