@@ -8,8 +8,8 @@ import com.qualcomm.robotcore.hardware.Servo;
 import edu.spa.ftclib.internal.drivetrain.MecanumDrivetrain;
 import edu.spa.ftclib.internal.state.Button;
 
-@TeleOp(name = "Teleop", group = "Meet2")
-public class TeleMeet2 extends OpMode {
+@TeleOp(name = "Teleop", group = "Meet3")
+public class TeleMeet3 extends OpMode {
     // Drivetrain Motors
     public DcMotor frontLeft;
     public DcMotor frontRight;
@@ -32,6 +32,9 @@ public class TeleMeet2 extends OpMode {
 
     private Button buttonA = new Button();
     private Button buttonB = new Button();
+    private Button buttonY = new Button();
+    private Button buttonX = new Button();
+    private Button buttonRightBumper = new Button();
     private Button buttonStart = new Button();
 
     // The MecanumDrivetrain courteous of HOMAR FTC library
@@ -61,6 +64,7 @@ public class TeleMeet2 extends OpMode {
         wobbleMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         flywheelMotor = hardwareMap.get(DcMotor.class, "flywheel");
         flywheelMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        flywheelMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         intakeMotor = hardwareMap.get(DcMotor.class, "intakeBottom");
         intakeMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
 
@@ -98,6 +102,7 @@ public class TeleMeet2 extends OpMode {
         if (buttonB.isPressed() && !buttonStart.isPressed()) {
             flywheelMotor.setPower(StemperFiConstants.FLYWHEEL_STOP);
         }
+        telemetry.addData("flywheel", flywheelMotor.getPower());
 
         // intake
         setIntake(-gamepad2.left_stick_y);
@@ -111,7 +116,10 @@ public class TeleMeet2 extends OpMode {
         wobbleGrabber(gamepad2.right_trigger, gamepad2.left_stick_x);
 
         // platform angle
-        angle(-gamepad2.right_stick_y);
+        buttonX.input(gamepad2.x);
+        buttonY.input(gamepad2.y);
+        buttonRightBumper.input(gamepad2.right_bumper);
+        angle(-gamepad2.right_stick_y, buttonX, buttonY, buttonRightBumper);
     }
 
     public void wobbleGrabber(double rightTigger, double x) {
@@ -129,20 +137,23 @@ public class TeleMeet2 extends OpMode {
 //        telemetry.addData("wobblePosition", wobbleServoPosition);
     }
 
-    public void angle(double y) {
-        if (y > 0.2) {
+    public void angle(double y, Button bX, Button bY, Button bRB) {
+        if (bRB.isPressed()) {
+            anglePosition = StemperFiConstants.ANGLE_POWER_SHOT;
+        } else if (bY.isPressed()) {
+            anglePosition = StemperFiConstants.ANGLE_SHOOT;
+        } else if (bX.isPressed()) {
+            anglePosition = StemperFiConstants.ANGLE_DOWN;
+        } else if (y > 0.2) {
             anglePosition = anglePosition + Math.round((float) (2 * y));
             anglePosition = Math.min(anglePosition, 720);
-            angleMotor.setTargetPosition(anglePosition);
-            angleMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-            angleMotor.setPower(1);
         } else if (y < -0.2) {
             anglePosition = anglePosition + Math.round((float) (2 * y));
             anglePosition = Math.max(anglePosition, 0);
-            angleMotor.setTargetPosition(anglePosition);
-            angleMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-            angleMotor.setPower(1);
         }
+        angleMotor.setTargetPosition(anglePosition);
+        angleMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        angleMotor.setPower(1);
 //        else {
 //            anglePosition = angleMotor.getCurrentPosition();
 //            angleMotor.setTargetPosition(anglePosition);
@@ -155,21 +166,21 @@ public class TeleMeet2 extends OpMode {
 
     public void wobble(double x) {
         if (x > 0.2) {
-            wobbleArmPosition = wobbleArmPosition - Math.round((float) (5 * x));
+            wobbleArmPosition = wobbleArmPosition - Math.round((float) (15 * x));
             wobbleArmPosition = Math.max(wobbleArmPosition, StemperFiConstants.WOBBLE_OUT);
             wobbleMotor.setTargetPosition(wobbleArmPosition);
             wobbleMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-            wobbleMotor.setPower(0.2);
+            wobbleMotor.setPower(0.9);
         } else if (x < -0.2) {
-            wobbleArmPosition = wobbleArmPosition - Math.round((float) (5 * x));
+            wobbleArmPosition = wobbleArmPosition - Math.round((float) (15 * x));
             wobbleArmPosition = Math.min(wobbleArmPosition, StemperFiConstants.WOBBLE_IN);
             wobbleMotor.setTargetPosition(wobbleArmPosition);
             wobbleMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-            wobbleMotor.setPower(0.2);
+            wobbleMotor.setPower(0.9);
         } else {
             wobbleMotor.setTargetPosition(wobbleArmPosition);
             wobbleMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-            wobbleMotor.setPower(0.2);
+            wobbleMotor.setPower(0.9);
         }
         telemetry.addData("wobble", wobbleMotor.getCurrentPosition());
     }
