@@ -7,10 +7,11 @@ public class StemperFiConstants {
     public static final double SLIDE_TICKS_PER_CM = 1000.0/50.0;
     public static final double TICKS_PER_DEGREE = 1100.0/90.0;
 
-    public static final double TRIGGER_SERVO_LOAD = .85;
+    public static final double TRIGGER_SERVO_LOAD = .90;
     public static final double TRIGGER_SERVO_FIRE = .53;
 
-    public static final double FLYWHEEL_RUN = 0.64;
+    public static final double FLYWHEEL_RUN_AUTO = 9.8;
+    public static final double FLYWHEEL_RUN = 0.9;
     public static final double FLYWHEEL_STOP = 0;
 
     public static final double INTAKE_SERVO_IN = 0;
@@ -29,7 +30,8 @@ public class StemperFiConstants {
     public static final double WOBBLE_SERVO_CLOSE = 0.64;
 
     public static final int ANGLE_DOWN = 0;
-    public static final int ANGLE_SHOOT = 577;
+    public static final int ANGLE_SHOOT = 670;
+    public static final int ANGLE_SHOOT_AUTO = 670 - 30;
     public static final int ANGLE_POWER_SHOT = 530;
 
     public static final String TARGET_ZONE_A = "";

@@ -6,6 +6,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -69,7 +70,8 @@ public class AutoMeet3 extends LinearOpMode {
     public int anglePosition = 0;
     public DcMotor wobbleMotor;
     public int wobbleArmPosition = 0;
-    public DcMotor flywheelMotor;
+    //public DcMotor flywheelMotor;
+    public DcMotorEx flywheelMotorEx;
     public DcMotor intakeMotor;
 
     public Servo triggerServo;
@@ -139,13 +141,14 @@ public class AutoMeet3 extends LinearOpMode {
             wobbleGrabber(gamepad2.right_trigger, gamepad2.left_stick_x);
         }
 
+        angleMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         if (tfod != null) {
             tfod.shutdown();
         }
 
         switch (targetZone) {
             case StemperFiConstants.TARGET_ZONE_A:
-                targetZoneRight = 30;
+                targetZoneRight = 37;
                 targetZoneForward = 40;
                 targetZonePark = 0;
                 break;
@@ -155,8 +158,8 @@ public class AutoMeet3 extends LinearOpMode {
                 targetZonePark = 80;
                 break;
             case StemperFiConstants.TARGET_ZONE_C:
-                targetZoneRight = 30;
-                targetZoneForward = 170;
+                targetZoneRight = 40;
+                targetZoneForward = 165;
                 targetZonePark = 130;
                 break;
         }
@@ -166,25 +169,33 @@ public class AutoMeet3 extends LinearOpMode {
         telemetry.addData("targetZonePark: ", targetZonePark);
         telemetry.update();
         runtime.reset();
-        moveForwardCM(153.5, 0.6);
+        moveForwardCM(153.5 + 10, 0.8);
+        moveBackwardsCM(14, 0.8);
         wobbleMotor.setTargetPosition(StemperFiConstants.WOBBLE_UP);
         wobbleMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         wobbleMotor.setPower(.5);
-        //flywheelMotor.setPower(StemperFiConstants.FLYWHEEL_RUN);
+        flywheelMotorEx.setPower(StemperFiConstants.FLYWHEEL_RUN_AUTO);
         slideRightCM(36.5, 0.5);
-        /**
-        angleMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        angleMotor.setTargetPosition(StemperFiConstants.ANGLE_SHOOT);
+
+
+        angleMotor.setTargetPosition(StemperFiConstants.ANGLE_SHOOT_AUTO);
         angleMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         angleMotor.setPower(0.9);
+        sleep(1000);
         for (int i = 0; i < 3; i++) {
+            long startTime = System.currentTimeMillis();
+//            do {
+//                telemetry.addData("vel: ", flywheelMotorEx.getVelocity());
+//                telemetry.update();
+//            } while (System.currentTimeMillis() - startTime < 2500);
             sleep(2500);
             triggerServo.setPosition(StemperFiConstants.TRIGGER_SERVO_FIRE);
             sleep(500);
             triggerServo.setPosition(StemperFiConstants.TRIGGER_SERVO_LOAD);
         }
-         */
         moveForwardCM(targetZoneForward, 0.6);
+        flywheelMotorEx.setPower(StemperFiConstants.FLYWHEEL_STOP);
+        //flywheelMotorEx.setVelocity(0);
         slideRightCM(targetZoneRight, 0.6);
         angleMotor.setTargetPosition(0);
         angleMotor.setPower(0.9);
@@ -221,9 +232,12 @@ public class AutoMeet3 extends LinearOpMode {
         wobbleMotor = hardwareMap.get(DcMotor.class, "wobble");
         wobbleMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         wobbleMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        flywheelMotor = hardwareMap.get(DcMotor.class, "flywheel");
-        flywheelMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-        flywheelMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+//        flywheelMotor = hardwareMap.get(DcMotor.class, "flywheel");
+//        flywheelMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+//        flywheelMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        flywheelMotorEx = hardwareMap.get(DcMotorEx.class, "flywheel");
+        flywheelMotorEx.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        flywheelMotorEx.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         intakeMotor = hardwareMap.get(DcMotor.class, "intakeBottom");
         intakeMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
 

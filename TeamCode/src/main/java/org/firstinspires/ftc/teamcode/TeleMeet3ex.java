@@ -1,15 +1,17 @@
 package org.firstinspires.ftc.teamcode;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.Servo;
 
 import edu.spa.ftclib.internal.drivetrain.MecanumDrivetrain;
 import edu.spa.ftclib.internal.state.Button;
-
-@TeleOp(name = "Teleop", group = "Meet3")
-public class TeleMeet3 extends OpMode {
+@Disabled
+@TeleOp(name = "TeleopEx", group = "Test")
+public class TeleMeet3ex extends OpMode {
     // Drivetrain Motors
     public DcMotor frontLeft;
     public DcMotor frontRight;
@@ -21,7 +23,7 @@ public class TeleMeet3 extends OpMode {
     public int anglePosition = 0;
     public DcMotor wobbleMotor;
     public int wobbleArmPosition = 0;
-    public DcMotor flywheelMotor;
+    public DcMotorEx flywheelMotorEx;
     public DcMotor intakeMotor;
 
     public Servo triggerServo;
@@ -55,9 +57,6 @@ public class TeleMeet3 extends OpMode {
         backRight = hardwareMap.get(DcMotor.class, "driveBackRight");
         driveMotors = new DcMotor[]{frontLeft, frontRight, backLeft, backRight};
         drivetrain = new MecanumDrivetrain(driveMotors);
-        for (DcMotor motor : driveMotors) {
-            motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-        }
 
         angleMotor = hardwareMap.get(DcMotor.class, "angle");
         angleMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -65,9 +64,10 @@ public class TeleMeet3 extends OpMode {
         wobbleMotor = hardwareMap.get(DcMotor.class, "wobble");
         wobbleMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         wobbleMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        flywheelMotor = hardwareMap.get(DcMotor.class, "flywheel");
-        flywheelMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-        flywheelMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        flywheelMotorEx = hardwareMap.get(DcMotorEx.class, "flywheel");
+        flywheelMotorEx.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        flywheelMotorEx.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        flywheelMotorEx.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         intakeMotor = hardwareMap.get(DcMotor.class, "intakeBottom");
         intakeMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
 
@@ -84,59 +84,29 @@ public class TeleMeet3 extends OpMode {
      */
     @Override
     public void loop() {
+        // Driver 1
+        double course = Math.atan2(-gamepad1.right_stick_y, gamepad1.right_stick_x) - Math.PI/2;
+        double velocity = Math.hypot(gamepad1.right_stick_x, gamepad1.right_stick_y);
+        double rotation = -gamepad1.left_stick_x;
 
-        if (gamepad1.y) {
-            for (DcMotor motor : driveMotors) {
-                motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-            }
-        }
-
-        boolean isRunning = false;
-        if (driveMotors[0].getMode() == DcMotor.RunMode.RUN_TO_POSITION) {
-            isRunning = true;
-            for (DcMotor motor : driveMotors) {
-                isRunning = isRunning && motor.isBusy();
-            }
-            if (!isRunning) {
-                for (DcMotor motor : driveMotors) {
-                    motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-                    motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-                }
-            }
-        }
-
-        if (!isRunning) {
-            if (gamepad1.b) {
-                slideLeftCM(19, 0.5);
-            } else if (gamepad1.x ) {
-                slideRightCM(19, 0.5);
-            } else {
-                // Driver 1
-                double course = Math.atan2(-gamepad1.right_stick_y, gamepad1.right_stick_x) - Math.PI / 2;
-                double velocity = Math.hypot(gamepad1.right_stick_x, gamepad1.right_stick_y);
-                double turnGovener = !gamepad1.right_bumper ? .666 : 1.0;
-                double rotation = -gamepad1.left_stick_x * turnGovener;
-
-                drivetrain.setCourse(course);
-                drivetrain.setVelocity(velocity);
-                drivetrain.setRotation(rotation);
-                telemetry.addData("course", String.format("%.01f cm", course));
-                telemetry.addData("velocity", String.format("%.01f mm", velocity));
-            }
-        }
+        drivetrain.setCourse(course);
+        drivetrain.setVelocity(velocity);
+        drivetrain.setRotation(rotation);
+        //telemetry.addData("course", String.format("%.01f cm", course));
+        //telemetry.addData("velocity", String.format("%.01f mm", velocity));
 
         // Flywheel
         buttonA.input(gamepad2.a);
         buttonB.input(gamepad2.b);
         buttonStart.input(gamepad2.start);
         if (buttonA.isPressed() && !buttonStart.isPressed()) {
-            flywheelMotor.setPower(StemperFiConstants.FLYWHEEL_RUN);
+            flywheelMotorEx.setVelocity(1800);
         }
         if (buttonB.isPressed() && !buttonStart.isPressed()) {
-            flywheelMotor.setPower(StemperFiConstants.FLYWHEEL_STOP);
+            flywheelMotorEx.setPower(0);
         }
-        telemetry.addData("flywheel", flywheelMotor.getPower());
-
+        telemetry.addData("vel: ", flywheelMotorEx.getVelocity());
+        telemetry.addData("pos: ", flywheelMotorEx.getCurrentPosition());
         // intake
         setIntake(-gamepad2.left_stick_y);
 
@@ -155,43 +125,16 @@ public class TeleMeet3 extends OpMode {
         angle(-gamepad2.right_stick_y, buttonX, buttonY, buttonRightBumper);
     }
 
-    // strafe robot to the left
-    public void slideLeftCM(double cm, double power) {
-        int ticks = (int) (cm * StemperFiConstants.SLIDE_TICKS_PER_CM);
-        for (DcMotor motor : driveMotors) {
-            motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        }
-
-        frontLeft.setTargetPosition(-ticks);
-        backLeft.setTargetPosition(ticks);
-
-        frontRight.setTargetPosition(-ticks);
-        backRight.setTargetPosition(ticks);
-
-        for (DcMotor motor : driveMotors) {
-            motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-            motor.setPower(power);
-        }
-    }
-
-    // strafe robot to the right
-    public void slideRightCM(double cm, double power) {
-        // right is just negative left
-        slideLeftCM(-cm, power);
-    }
-
-
     public void wobbleGrabber(double rightTigger, double x) {
         if (rightTigger > 0.2) {
             wobbleServoPosition = StemperFiConstants.WOBBLE_SERVO_OPEN;
         } else if (x > 0.2) {
             wobbleServoPosition += 0.05;
             wobbleServoPosition = Math.min(StemperFiConstants.WOBBLE_SERVO_CLOSE, wobbleServoPosition);
+        } else if (x < -0.2) {
+            wobbleServoPosition -= 0.05;
+            wobbleServoPosition = Math.max(StemperFiConstants.WOBBLE_SERVO_OPEN, wobbleServoPosition);
         }
-//        else if (x < -0.2) {
-//            wobbleServoPosition -= 0.05;
-//            wobbleServoPosition = Math.max(StemperFiConstants.WOBBLE_SERVO_OPEN, wobbleServoPosition);
-//        }
         wobbleServo.setPosition(wobbleServoPosition);
 //        telemetry.addData("x", x);
 //        telemetry.addData("wobblePosition", wobbleServoPosition);
