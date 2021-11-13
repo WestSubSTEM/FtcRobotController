@@ -1,6 +1,7 @@
 package edu.spa.ftclib.sample.opmode;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
@@ -11,6 +12,7 @@ import edu.spa.ftclib.sample.robot.BNO055HolonomicBot;
  * An introduction to using drivetrains and Robots. Written for beginners; no sensors or advanced coding techniques used. Once you understand the concepts, a lot of this can be done in fewer lines of code by using more methods, loops, etc.
  */
 
+@Disabled
 @Autonomous(name = "BNO055 Holonomic Bot Autonomous By Time", group = "sample")
 public class BNO055HolonomicBotAutonomousByTime extends LinearOpMode {
     BNO055HolonomicBot robot;

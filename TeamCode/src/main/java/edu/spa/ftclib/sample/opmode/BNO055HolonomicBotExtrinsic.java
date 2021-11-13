@@ -15,7 +15,7 @@ import edu.spa.ftclib.sample.robot.BNO055HolonomicBot;
  * Updated for extrinsic offset and successfully re-tested by Gabriel on 2019-1-25
  */
 
-//@Disabled
+@Disabled
 @TeleOp(name = "BNO055 Holonomic Bot Extrinsic", group = "sample")
 
 public class BNO055HolonomicBotExtrinsic extends OpMode {
