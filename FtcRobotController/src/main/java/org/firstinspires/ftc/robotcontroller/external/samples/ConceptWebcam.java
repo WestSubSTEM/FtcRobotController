@@ -73,8 +73,8 @@ import java.util.concurrent.TimeUnit;
  * by various means (e.g.: Device File Explorer in Android Studio; plugging the device into a PC and
  * using Media Transfer; ADB; etc)
  */
-@TeleOp(name="Concept: Webcam", group ="Concept")
 @Disabled
+@TeleOp(name="Concept: Webcam", group ="Concept")
 public class ConceptWebcam extends LinearOpMode {
 
     //----------------------------------------------------------------------------------------------
