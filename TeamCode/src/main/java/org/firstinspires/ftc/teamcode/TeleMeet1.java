@@ -140,7 +140,7 @@ public class TeleMeet1 extends OpMode {
         }
 
         setIntake(gamepad2.right_trigger, gamepad2.left_trigger);
-        setTurntable(gamepad2.right_bumper);
+        setTurntable(gamepad2.right_bumper, gamepad2.left_bumper);
         telemetry.update();
     }
 
@@ -173,9 +173,11 @@ public class TeleMeet1 extends OpMode {
         telemetry.addData("WormTarget: ", targetPosition);
     }
 
-    private void setTurntable(boolean rightBumper) {
+    private void setTurntable(boolean rightBumper, boolean leftBumper) {
         if (rightBumper) {
             turntableMotor.setPower(StemperFiConstants.TURNTABLE_MOTOR_ON);
+        } else if (leftBumper) {
+            turntableMotor.setPower(-StemperFiConstants.TURNTABLE_MOTOR_ON);
         } else {
             turntableMotor.setPower(0);
         }

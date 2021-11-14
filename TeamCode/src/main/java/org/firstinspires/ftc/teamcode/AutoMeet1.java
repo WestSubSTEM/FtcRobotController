@@ -12,8 +12,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 import edu.spa.ftclib.internal.drivetrain.MecanumDrivetrain;
 
-@Disabled
-@Autonomous(name = "Auto", group = "Meet2")
+@Autonomous(name = "Auto", group = "Meet1")
 public class AutoMeet1 extends LinearOpMode {
 
     private ElapsedTime runtime = new ElapsedTime();
@@ -30,6 +29,8 @@ public class AutoMeet1 extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
         initRobot();
+        waitForStart();
+        moveForwardTime(2000, .5);
     }
 
     private void initRobot() {
@@ -48,6 +49,18 @@ public class AutoMeet1 extends LinearOpMode {
         drivetrain = new MecanumDrivetrain(driveMotors);
 
 
+    }
+    // Move the robot forwards
+    public void moveForwardTime(long timems, double power) {
+        for (DcMotor motor : driveMotors) {
+            motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+            motor.setPower(power);
+        }
+        sleep(timems);
+        for (DcMotor motor : driveMotors) {
+            motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+            motor.setPower(0);
+        }
     }
 
     // Move the robot forwards

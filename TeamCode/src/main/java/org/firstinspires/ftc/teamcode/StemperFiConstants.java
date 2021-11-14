@@ -7,7 +7,7 @@ public class StemperFiConstants {
     public static final double INTAKE_SERVO_SPEED_OFF = 0.5;
 
     public static final double TURNTABLE_MOTOR_OFF = 0;
-    public static final double TURNTABLE_MOTOR_ON = 0.6;
+    public static final double TURNTABLE_MOTOR_ON = 0.5;
 
     public static final double ENCODER_SERVO_TELE_RIGHT = 0.5;
     public static final double ENCODER_SERVO_TELE_LEFT = 0.78;
