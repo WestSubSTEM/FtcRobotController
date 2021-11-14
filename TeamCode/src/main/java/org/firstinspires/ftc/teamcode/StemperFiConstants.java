@@ -7,7 +7,7 @@ public class StemperFiConstants {
     public static final double INTAKE_SERVO_SPEED_OFF = 0.5;
 
     public static final double TURNTABLE_MOTOR_OFF = 0;
-    public static final double TURNTABLE_MOTOR_ON = 0.4;
+    public static final double TURNTABLE_MOTOR_ON = 0.6;
 
     public static final double ENCODER_SERVO_TELE_RIGHT = 0.5;
     public static final double ENCODER_SERVO_TELE_LEFT = 0.78;
@@ -17,8 +17,23 @@ public class StemperFiConstants {
     public static final double ENCODER_SERVO_AUT0_LEFT = 0.4;
     public static final double ENCODER_SERVO_AUT0_CENTER = 0.42;
 
-    public static final double BUCKET_SERVO_MIN = 0.3;
+    public static final double BUCKET_SERVO_MIN = 0.0;
     public static final double BUCKET_SERVO_MAX = 1.0;
+
+    public static final double BUCKET_SERVO_INIT = 1.0;
+
+    public static final double BUCKET_SERVO_INTAKE = .259;
+    public static final int WORM_MOTOR_INTAKE = -154;
+
+    public static final double BUCKET_SERVO_GOAL_TOP = .5449;
+    public static final int WORM_MOTOR_GOAL_TOP = -3810;
+
+    public static final double BUCKET_SERVO_GOAL_MIDDLE = .54499;
+    public static final int WORM_MOTOR_GOAL_MIDDLE = -3900;
+
+    public static final double BUCKET_SERVO_GOAL_BOTTOM = .2149;
+    public static final int WORM_MOTOR_GOAL_BOTTOM = -5327;
+
 
     // How many encoder ticks to move forward/backwards 1 cm
     public static final double TICKS_PER_CM = 1000.0/58.0;

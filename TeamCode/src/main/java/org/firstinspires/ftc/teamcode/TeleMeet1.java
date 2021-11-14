@@ -4,7 +4,10 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.LED;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.hardware.TouchSensor;
 
 import edu.spa.ftclib.internal.drivetrain.MecanumDrivetrain;
 import edu.spa.ftclib.internal.state.Button;
@@ -19,21 +22,22 @@ public class TeleMeet1 extends OpMode {
     public DcMotor[] driveMotors;
 
     public DcMotorEx turntableMotor, wormMotor;
+    public TouchSensor zeroTouchSensor;
+    public LED zeroLED;
 
     public Servo intakeServo;
     public double intakeServoSpeed = StemperFiConstants.INTAKE_SERVO_SPEED_OFF;
 
     public Servo bucketServo;
-    public double bucketServoPosition = ((StemperFiConstants.BUCKET_SERVO_MAX - StemperFiConstants.BUCKET_SERVO_MIN) / 2.0) * StemperFiConstants.BUCKET_SERVO_MIN;
+    public double bucketServoPosition = StemperFiConstants.BUCKET_SERVO_INIT;
 
     private Servo encoderServoRight, encoderServoLeft, encoderServoCenter;
-
 
     private Button buttonA = new Button();
     private Button buttonB = new Button();
     private Button buttonX = new Button();
     private Button buttonY = new Button();
-
+    private Button buttonZero = new Button();
 
     // The MecanumDrivetrain courteous of HOMAR FTC library
     public MecanumDrivetrain drivetrain;
@@ -59,18 +63,22 @@ public class TeleMeet1 extends OpMode {
         encoderServoCenter.setPosition(StemperFiConstants.ENCODER_SERVO_TELE_CENTER);
 
         turntableMotor = hardwareMap.get(DcMotorEx.class, "turntable");
+        turntableMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         turntableMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         wormMotor = hardwareMap.get(DcMotorEx.class, "worm");
-        wormMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        wormMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         wormMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         wormMotor.setTargetPosition(0);
         wormMotor.setPower(1);
         intakeServo = hardwareMap.get(Servo.class, "intake");
         intakeServo.setPosition(StemperFiConstants.INTAKE_SERVO_SPEED_OFF);
 
-        bucketServo =hardwareMap.get(Servo.class, "bucket");
+        bucketServo = hardwareMap.get(Servo.class, "bucket");
         bucketServo.setPosition(bucketServoPosition);
+
+        zeroTouchSensor = hardwareMap.get(TouchSensor.class, "zero");
+        zeroLED = hardwareMap.get(LED.class, "zeroLed");
     }
 
     @Override
@@ -86,15 +94,53 @@ public class TeleMeet1 extends OpMode {
         //telemetry.addData("course", String.format("%.01f cm", course));
         //telemetry.addData("velocity", String.format("%.01f mm", velocity));
 
-        buttonA.input(gamepad1.a);
+        buttonA.input(gamepad2.a);
         buttonB.input(gamepad2.b);
         buttonX.input(gamepad2.x);
         buttonY.input(gamepad2.y);
+        buttonZero.input(zeroTouchSensor.isPressed());
+
+        if (buttonZero.onPress()) {
+            telemetry.addData("ZeroButton Pressed! ", buttonZero.onPress());
+            zeroLED.enableLight(true);
+            wormMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+            wormMotor.setTargetPosition(0);
+            wormMotor.setPower(0);
+        } else {
+            zeroLED.enableLight(false);
+        }
+
+        if (buttonX.onPress()) {
+            bucketServoPosition = StemperFiConstants.BUCKET_SERVO_INTAKE;
+            bucketServo.setPosition(bucketServoPosition);
+            wormMotor.setTargetPosition(StemperFiConstants.WORM_MOTOR_INTAKE);
+            wormMotor.setPower(1);
+            wormMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        } else if (buttonY.onPress()) {
+            bucketServoPosition =StemperFiConstants.BUCKET_SERVO_GOAL_TOP;
+            bucketServo.setPosition(bucketServoPosition);
+            wormMotor.setTargetPosition(StemperFiConstants.WORM_MOTOR_GOAL_TOP);
+            wormMotor.setPower(1);
+            wormMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        } else if (buttonB.onPress()) {
+            bucketServoPosition = StemperFiConstants.BUCKET_SERVO_GOAL_MIDDLE;
+            bucketServo.setPosition(bucketServoPosition);
+            wormMotor.setTargetPosition(StemperFiConstants.WORM_MOTOR_GOAL_MIDDLE);
+            wormMotor.setPower(1);
+            wormMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        } else if (buttonA.onPress()) {
+            bucketServoPosition = StemperFiConstants.BUCKET_SERVO_GOAL_BOTTOM;
+            bucketServo.setPosition(bucketServoPosition);
+            wormMotor.setTargetPosition(StemperFiConstants.WORM_MOTOR_GOAL_BOTTOM);
+            wormMotor.setPower(1);
+            wormMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        } else {
+            setWormMotor(gamepad2.left_stick_y);
+            setBucket(gamepad2.right_stick_y);
+        }
 
         setIntake(gamepad2.right_trigger, gamepad2.left_trigger);
         setTurntable(gamepad2.right_bumper);
-        setWormMotor(gamepad2.left_stick_y);
-        setBucket(gamepad2.right_stick_y);
         telemetry.update();
     }
 
@@ -115,10 +161,10 @@ public class TeleMeet1 extends OpMode {
     private void setWormMotor(double leftStickY) {
         int targetPosition = wormMotor.getTargetPosition();
         if (leftStickY > 0.2 || leftStickY < -0.2) {
-            if (leftStickY > 0.2) {
-                targetPosition += 10;
-            } else {
-                targetPosition -= 10;
+            if (leftStickY > 0.2 && !buttonZero.isPressed()) {
+                targetPosition = wormMotor.getCurrentPosition() + 100 ;
+            } else if (leftStickY <  -0.2) {
+                targetPosition = wormMotor.getCurrentPosition() - 100;
             }
         }
         wormMotor.setTargetPosition(targetPosition);
