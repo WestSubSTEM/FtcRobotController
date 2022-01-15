@@ -12,7 +12,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 import edu.spa.ftclib.internal.drivetrain.MecanumDrivetrain;
 
-@Autonomous(name = "Auto", group = "Meet1")
+@Autonomous(name = "Park", group = "Meet1")
 public class AutoMeet1 extends LinearOpMode {
 
     private ElapsedTime runtime = new ElapsedTime();
@@ -25,12 +25,13 @@ public class AutoMeet1 extends LinearOpMode {
     public DcMotor[] driveMotors;
     // The MecanumDrivetrain courteous of HOMAR FTC library
     public MecanumDrivetrain drivetrain;
+    private Servo encoderServoRight, encoderServoLeft, encoderServoCenter;
 
     @Override
     public void runOpMode() throws InterruptedException {
         initRobot();
         waitForStart();
-        moveForwardTime(2000, .5);
+        moveForwardTime(700, .5);
     }
 
     private void initRobot() {
@@ -48,6 +49,14 @@ public class AutoMeet1 extends LinearOpMode {
         }
         drivetrain = new MecanumDrivetrain(driveMotors);
 
+
+        encoderServoLeft = hardwareMap.get(Servo.class, "encoderLeft");
+        encoderServoRight = hardwareMap.get(Servo.class, "encoderRight");
+        encoderServoCenter = hardwareMap.get(Servo.class, "encoderCenter");
+
+        encoderServoLeft.setPosition(StemperFiConstants.ENCODER_SERVO_TELE_LEFT);
+        encoderServoRight.setPosition(StemperFiConstants.ENCODER_SERVO_TELE_RIGHT);
+        encoderServoCenter.setPosition(StemperFiConstants.ENCODER_SERVO_TELE_CENTER);
 
     }
     // Move the robot forwards

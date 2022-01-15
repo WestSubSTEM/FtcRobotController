@@ -74,9 +74,8 @@ import static org.firstinspires.ftc.robotcore.external.navigation.AxesReference.
  * IMPORTANT: In order to use this OpMode, you need to obtain your own Vuforia license key as
  * is explained below.
  */
-
-@TeleOp(name="Vuforia Field Nav Webcam", group ="Concept")
 @Disabled
+@TeleOp(name="Vuforia Field Nav Webcam", group ="Concept")
 public class ConceptVuforiaFieldNavigationWebcam extends LinearOpMode {
 
     /*
@@ -91,8 +90,7 @@ public class ConceptVuforiaFieldNavigationWebcam extends LinearOpMode {
      * Once you've obtained a license key, copy the string from the Vuforia web site
      * and paste it in to your code on the next line, between the double quotes.
      */
-    private static final String VUFORIA_KEY =
-            " --- YOUR NEW VUFORIA KEY GOES HERE  --- ";
+    private static final String VUFORIA_KEY = "AXRxi6H/////AAAAGXFBcOuXBkpfsXQl3RrsaWMs3rPkMqV94uKhxmHX5LE95IW4PqzCg3G44Uqx8hnsDvRnPQrbus1zvbgc+3sPBt4w08IbyebgwgnFN9221SFutmZ76ox5ctJ6+HhTKIyfyYJjSWUaxADTzTy5w8BNnu9KOk6GOiafGNqbDzFffECDcnfSkxQBSlvuTtioONy5dKrhUj6nFuIXIXFO9kb6vqhqjzS6ViKUcSbkYmQ8Pjrqb5W4cUd+wyeGMDqFQkEUlWdm/z/J+p774VeP9NquwDPUVfR4GLUEQsA8/EG0B8IoVG1VCeHZOJcpIiapQOPQ9eMpVaBr+Qj6E0kaEUR5vZ9QFXYDpk+1fpyB1RGGSmAm";
 
     // Since ImageTarget trackables use mm to specifiy their dimensions, we must use mm for all the physical dimension.
     // We will define some constants and conversions here

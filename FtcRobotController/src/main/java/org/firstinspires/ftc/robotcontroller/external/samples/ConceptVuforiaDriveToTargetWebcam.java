@@ -14,7 +14,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackable;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackableDefaultListener;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackables;
-
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 /**
  * This OpMode illustrates using a webcam to locate and drive towards ANY Vuforia target.
  * The code assumes a basic two-wheel Robot Configuration with motors named left_drive and right_drive.
@@ -38,9 +38,8 @@ import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackables;
  * IMPORTANT: In order to use this OpMode, you need to obtain your own Vuforia license key as
  * is explained below.
  */
-
-@TeleOp(name="Drive To Target", group = "Concept")
 @Disabled
+@TeleOp(name="Drive To Target", group = "Concept")
 public class ConceptVuforiaDriveToTargetWebcam extends LinearOpMode
 {
     // Adjust these numbers to suit your robot.
@@ -65,8 +64,7 @@ public class ConceptVuforiaDriveToTargetWebcam extends LinearOpMode
      * Once you've obtained a license key, copy the string from the Vuforia web site
      * and paste it in to your code on the next line, between the double quotes.
      */
-    private static final String VUFORIA_KEY =
-            " --- YOUR NEW VUFORIA KEY GOES HERE  --- ";
+    private static final String VUFORIA_KEY = "AXRxi6H/////AAAAGXFBcOuXBkpfsXQl3RrsaWMs3rPkMqV94uKhxmHX5LE95IW4PqzCg3G44Uqx8hnsDvRnPQrbus1zvbgc+3sPBt4w08IbyebgwgnFN9221SFutmZ76ox5ctJ6+HhTKIyfyYJjSWUaxADTzTy5w8BNnu9KOk6GOiafGNqbDzFffECDcnfSkxQBSlvuTtioONy5dKrhUj6nFuIXIXFO9kb6vqhqjzS6ViKUcSbkYmQ8Pjrqb5W4cUd+wyeGMDqFQkEUlWdm/z/J+p774VeP9NquwDPUVfR4GLUEQsA8/EG0B8IoVG1VCeHZOJcpIiapQOPQ9eMpVaBr+Qj6E0kaEUR5vZ9QFXYDpk+1fpyB1RGGSmAm";
 
     VuforiaLocalizer vuforia    = null;
     OpenGLMatrix targetPose     = null;
