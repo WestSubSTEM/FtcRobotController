@@ -7,7 +7,7 @@ public class StemperFiConstants {
     public static final long TICKS_PER_MM = Math.round(36400 /600);
     public static final int MM_PER_SQUARE = 600;
 
-    public static final int TICKS_PER_DEGREE = 1000 / 10;
+    public static final int TICKS_PER_DEGREE = 210;
 
     public static final int RED = Color.rgb(200, 0, 0);
     public static final int GREEN = Color.rgb(0,200, 0);
@@ -40,7 +40,7 @@ public class StemperFiConstants {
 
     public static final int WORM_MOTOR_INTAKE = -183;
 
-    public static final double BUCKET_SERVO_RIGHT_GOAL_TOP_AUTO = .4;
+    public static final double BUCKET_SERVO_RIGHT_GOAL_TOP_AUTO = .55;
     public static final double BUCKET_SERVO_RIGHT_GOAL_TOP = .35;
     public static final int WORM_MOTOR_GOAL_TOP = -3759;
 

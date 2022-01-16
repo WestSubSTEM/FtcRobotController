@@ -45,7 +45,7 @@ public class AutoMeet2 extends LinearOpMode {
     private double bucketServoRightPosition = StemperFiConstants.BUCKET_SERVO_RIGHT_INIT;
     private double bucketServoLeftPosition = 1 - bucketServoRightPosition;
 
-    private int MM_TO_TOWER = 410;
+    private int MM_TO_TOWER = 450;
 
     // Drivetrain Motors
     public DcMotor frontLeft;
@@ -53,6 +53,7 @@ public class AutoMeet2 extends LinearOpMode {
     public DcMotor frontRight;
     public DcMotor rightEncoder;
     public DcMotor backLeft;
+    public DcMotor backEncoder;
     public DcMotor backRight;
     public DcMotor[] driveMotors;
     // The MecanumDrivetrain courteous of HOMAR FTC library
@@ -86,11 +87,7 @@ public class AutoMeet2 extends LinearOpMode {
         if (wait > 0) {
             sleep(1_000 * wait);
         }
-        /*
-        turnRight(1000, .4);
-        while (opModeIsActive()) {
-            sleep(100);
-        }*/
+
         if (opModeIsActive()) {
             moveBackwardsMM(MM_TO_TOWER, .4);
 
@@ -101,22 +98,24 @@ public class AutoMeet2 extends LinearOpMode {
             wormMotor.setTargetPosition(StemperFiConstants.WORM_MOTOR_GOAL_TOP);
             wormMotor.setPower(1);
             wormMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-            sleep(1000);
+            sleep(2000);
 
             bucketServoRightPosition = StemperFiConstants.BUCKET_SERVO_RIGHT_GOAL_TOP_AUTO;
             bucketServoLeftPosition = 1 - bucketServoRightPosition;
             bucketServoRight.setPosition(bucketServoRightPosition);
             bucketServoLeft.setPosition(bucketServoLeftPosition);
+
+            sleep(2000);
+
             intakeServoSpeed = StemperFiConstants.INTAKE_SERVO_SPEED_OUT;
             intakeServo.setPosition(intakeServoSpeed);
 
-            sleep(1000);
+            sleep(2000);
 
             intakeServoSpeed = StemperFiConstants.INTAKE_SERVO_SPEED_OFF;
             intakeServo.setPosition(intakeServoSpeed);
 
-            moveForwardMM(MM_TO_TOWER / 2, .4);
-
+            moveForwardMM(MM_TO_TOWER / 4, .4);
 
             bucketServoRightPosition = StemperFiConstants.BUCKET_SERVO_RIGHT_INIT;
             bucketServoLeftPosition = 1 - bucketServoRightPosition;
@@ -125,16 +124,19 @@ public class AutoMeet2 extends LinearOpMode {
             wormMotor.setTargetPosition(StemperFiConstants.WORM_MOTOR_INTAKE);
             wormMotor.setPower(1);
             wormMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        }
-
-        if(opModeIsActive()) {
             if (isBlue) {
                 slideRightTime(1000, .6);
+                turnLeft(60, .5);
             } else {
                 slideLeftTime(1000, .6);
+                turnRight(60, .5);
             }
+            pullUpEncoders();
+            moveForwardTime(2000, -.8);
+
         }
     }
+
 
     private void initRobot() {
 
@@ -146,6 +148,7 @@ public class AutoMeet2 extends LinearOpMode {
         rightEncoder = frontRight;
         backLeft = hardwareMap.get(DcMotor.class, "driveBackLeft");
         backLeft.setDirection(DcMotorSimple.Direction.REVERSE);
+        backEncoder = backLeft;
         backRight = hardwareMap.get(DcMotor.class, "driveBackRight");
 
         driveMotors = new DcMotor[]{frontLeft, frontRight, backLeft, backRight};
@@ -163,6 +166,7 @@ public class AutoMeet2 extends LinearOpMode {
         turntableMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         turntableMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         turntableMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
 
         topLEDStrip = hardwareMap.get(QwiicLEDStrip.class, "TopLED");
         topLEDStrip.turnAllOff();
@@ -222,19 +226,19 @@ public class AutoMeet2 extends LinearOpMode {
         backRight.setPower(-power);
         frontLeft.setPower(power);
         backLeft.setPower(power);
-
         long ticks = StemperFiConstants.TICKS_PER_DEGREE * degrees;
-
         long cp = 0;
         do {
-            long rcp =rightEncoder.getCurrentPosition();
-            long lcp =leftEncoder.getCurrentPosition();
-            cp = rcp;
-            telemetry.addData("tr rcp cp: ", rcp);
-            telemetry.addData("tr lcp cp: ", lcp);
-            telemetry.addData("tr le tp: ", ticks);
+            long rcp = rightEncoder.getCurrentPosition();
+            long lcp = leftEncoder.getCurrentPosition();
+            long mcp = backEncoder.getCurrentPosition();
+            cp = mcp;
+            telemetry.addData("tr rcp: ", rcp);
+            telemetry.addData("tr lcp: ", lcp);
+            telemetry.addData("tr mcp: ", mcp);
+            telemetry.addData("tr target: ", ticks);
             telemetry.update();
-        } while (cp > ticks);
+        } while (cp < ticks);
         stopAndReset();
     }
 
@@ -244,16 +248,18 @@ public class AutoMeet2 extends LinearOpMode {
         backRight.setPower(power);
         frontLeft.setPower(-power);
         backLeft.setPower(-power);
-        long ticks = StemperFiConstants.TICKS_PER_DEGREE * degrees;
+        long ticks = - StemperFiConstants.TICKS_PER_DEGREE * degrees;
 
         long cp = 0;
         do {
             long rcp =rightEncoder.getCurrentPosition();
             long lcp =leftEncoder.getCurrentPosition();
-            cp = rcp;
-            telemetry.addData("tr rcp cp: ", rcp);
-            telemetry.addData("tr lcp cp: ", lcp);
-            telemetry.addData("tr le tp: ", ticks);
+            long mcp = backEncoder.getCurrentPosition();
+            cp = mcp;
+            telemetry.addData("tl rcp: ", rcp);
+            telemetry.addData("tl lcp: ", lcp);
+            telemetry.addData("tl mcp: ", mcp);
+            telemetry.addData("tl target: ", ticks);
             telemetry.update();
         } while (cp > ticks);
         stopAndReset();
@@ -261,34 +267,46 @@ public class AutoMeet2 extends LinearOpMode {
 
 
     public void moveForwardMM(long mm, double power) {
+        long ticks = mm * StemperFiConstants.TICKS_PER_MM;
         stopAndReset();
         for (DcMotor motor : driveMotors) {
             motor.setPower(power);
         }
-        long cp = 0;
-        long ticks = StemperFiConstants.TICKS_PER_MM * mm;
+        long cpMax = 0;
+        long cpr = 0;
+        long cpl = 0;
         do {
-            cp = rightEncoder.getCurrentPosition();
-            telemetry.addData("r cp: ", cp);
-            telemetry.addData("r tp: ", ticks);
+            cpr = Math.abs(rightEncoder.getCurrentPosition());
+            cpl = Math.abs(leftEncoder.getCurrentPosition());
+            cpMax = Math.max(cpr, cpl);
+            telemetry.addData("bw   cpr: ", cpr);
+            telemetry.addData("bw   cpl: ", cpl);
+            telemetry.addData("bw cpMax: ", cpMax);
+            telemetry.addData("bw    tp: ", ticks);
             telemetry.update();
-        } while (cp < ticks && opModeIsActive());
+        } while (cpMax < ticks && opModeIsActive());
         stopAndReset();
     }
 
     public void moveBackwardsMM(long mm, double power) {
-        long ticks = mm * StemperFiConstants.TICKS_PER_MM * -1;
+        long ticks = mm * StemperFiConstants.TICKS_PER_MM;
         stopAndReset();;
         for (DcMotor motor : driveMotors) {
             motor.setPower(-power);
         }
-        long cp = 0;
+        long cpMax = 0;
+        long cpr = 0;
+        long cpl = 0;
         do {
-            cp = rightEncoder.getCurrentPosition();
-            telemetry.addData("bw cp: ", cp);
-            telemetry.addData("bw tp: ", ticks);
+            cpr = Math.abs(rightEncoder.getCurrentPosition());
+            cpl = Math.abs(leftEncoder.getCurrentPosition());
+            cpMax = Math.max(cpr, cpl);
+            telemetry.addData("bw   cpr: ", cpr);
+            telemetry.addData("bw   cpl: ", cpl);
+            telemetry.addData("bw cpMax: ", cpMax);
+            telemetry.addData("bw    tp: ", ticks);
             telemetry.update();
-        } while (cp > ticks && opModeIsActive());
+        } while (cpMax < ticks && opModeIsActive());
         stopAndReset();
     }
 
@@ -357,14 +375,20 @@ public class AutoMeet2 extends LinearOpMode {
     public void slideRightTime(int miliseconds, double power) {
         stopAndReset();
 
-        frontRight.setPower(power);
-        backLeft.setPower(power);
-        frontLeft.setPower(-power);
-        backRight.setPower(-power);
+        frontRight.setPower(-power);
+        backLeft.setPower(-power);
+        frontLeft.setPower(power);
+        backRight.setPower(power);
 
         sleep(miliseconds);
 
         stopAndReset();
+    }
+
+    public void pullUpEncoders() {
+        encoderServoLeft.setPosition(StemperFiConstants.ENCODER_SERVO_TELE_LEFT);
+        encoderServoRight.setPosition(StemperFiConstants.ENCODER_SERVO_TELE_RIGHT);
+        encoderServoCenter.setPosition(StemperFiConstants.ENCODER_SERVO_TELE_CENTER);
     }
 
     // rotate the robot
