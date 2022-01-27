@@ -126,13 +126,13 @@ public class AutoMeet2 extends LinearOpMode {
             wormMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
             if (isBlue) {
                 slideRightTime(1000, .6);
-                turnLeft(60, .5);
+                turnLeft(80, .5);
             } else {
                 slideLeftTime(1000, .6);
-                turnRight(60, .5);
+                turnRight(80, .5);
             }
             pullUpEncoders();
-            moveForwardTime(2000, -.8);
+            moveForwardTime(1500, -.8);
 
         }
     }
