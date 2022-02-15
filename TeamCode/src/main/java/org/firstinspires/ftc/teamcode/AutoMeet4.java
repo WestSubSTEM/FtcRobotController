@@ -1,10 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.eventloop.opmode.OpMode;
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
@@ -13,13 +10,11 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.TouchSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-import org.firstinspires.ftc.robotcore.external.Telemetry;
-
 import edu.spa.ftclib.internal.drivetrain.MecanumDrivetrain;
 import edu.spa.ftclib.internal.state.Button;
-@Disabled
-@Autonomous(name = "Cube", group = "Meet2")
-public class AutoMeet2 extends LinearOpMode {
+
+@Autonomous(name = "Qual Auto", group = "Meet4")
+public class AutoMeet4 extends LinearOpMode {
 
     private ElapsedTime runtime = new ElapsedTime();
 
@@ -45,7 +40,9 @@ public class AutoMeet2 extends LinearOpMode {
     private double bucketServoRightPosition = StemperFiConstants.BUCKET_SERVO_RIGHT_INIT;
     private double bucketServoLeftPosition = 1 - bucketServoRightPosition;
 
-    private int MM_TO_TOWER = 450;
+    private int MM_TO_TOWER_TOP = 450;
+    private int MM_TO_TOWER_MIDDLE = 450 - 160;
+    private int MM_TO_TOWER_BOTTOM = 450 - 140 ;
 
     // Drivetrain Motors
     public DcMotor frontLeft;
@@ -89,8 +86,208 @@ public class AutoMeet2 extends LinearOpMode {
         }
 
         if (opModeIsActive()) {
-            moveBackwardsMM(MM_TO_TOWER, .4);
 
+            int slideTime = 1600;
+            double powSlide = .4;
+
+//SCORING BOTTOM OF HUB AUTO
+            /*
+            slideLeftTime(slideTime,powSlide);
+            moveBackwardsMM(MM_TO_TOWER_BOTTOM, .4);
+            bucketServoRightPosition = StemperFiConstants.BOTTOM_SERVO_SCORE;
+            bucketServoLeftPosition = 1 - bucketServoRightPosition;
+            bucketServoRight.setPosition(bucketServoRightPosition);
+            bucketServoLeft.setPosition(bucketServoLeftPosition);
+            wormMotor.setTargetPosition(StemperFiConstants.BOTTOM_WORM_GEAR);
+            wormMotor.setPower(1);
+            wormMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            sleep(2000);
+
+
+
+
+            sleep(1000);
+
+            intakeServoSpeed = StemperFiConstants.INTAKE_SERVO_SPEED_OUT;
+            intakeServo.setPosition(intakeServoSpeed);
+
+            sleep (1000);
+
+            bucketServoRightPosition = StemperFiConstants.BUCKET_SERVO_RIGHT_GOAL_MIDDLE;
+            bucketServoLeftPosition = 1 - bucketServoRightPosition;
+            bucketServoRight.setPosition(bucketServoRightPosition);
+            bucketServoLeft.setPosition(bucketServoLeftPosition);
+
+            intakeServo.setPosition(intakeServoSpeed);
+            */
+
+            //SCORING MIDDLE OF HUB AUTO
+
+            slideLeftTime(slideTime,powSlide);
+            moveBackwardsMM(MM_TO_TOWER_MIDDLE, .4);
+            /*
+            bucketServoRightPosition = StemperFiConstants.BUCKET_SERVO_RIGHT_GOAL_MIDDLE;
+            bucketServoLeftPosition = 1 - bucketServoRightPosition;
+            bucketServoRight.setPosition(bucketServoRightPosition);
+            bucketServoLeft.setPosition(bucketServoLeftPosition);
+            wormMotor.setTargetPosition(StemperFiConstants.WORM_MOTOR_GOAL_MIDDLE);
+            wormMotor.setPower(1);
+            wormMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            sleep(2000);
+
+            bucketServoRightPosition = StemperFiConstants.MID_SERVO_SCORE;
+            bucketServoLeftPosition = 1 - bucketServoRightPosition;
+            bucketServoRight.setPosition(bucketServoRightPosition);
+            bucketServoLeft.setPosition(bucketServoLeftPosition);
+
+
+            sleep(1000);
+
+            intakeServoSpeed = StemperFiConstants.INTAKE_SERVO_SPEED_OUT;
+            intakeServo.setPosition(intakeServoSpeed);
+
+            sleep (1000);
+
+            bucketServoRightPosition = StemperFiConstants.BUCKET_SERVO_RIGHT_GOAL_MIDDLE;
+            bucketServoLeftPosition = 1 - bucketServoRightPosition;
+            bucketServoRight.setPosition(bucketServoRightPosition);
+            bucketServoLeft.setPosition(bucketServoLeftPosition);
+
+            intakeServo.setPosition(.5);
+
+                */
+            // SCORING TOP OF HUB AUTO
+           /* slideLeftTime(slideTime,powSlide);
+            moveBackwardsMM(MM_TO_TOWER_TOP, .4);
+            bucketServoRightPosition = StemperFiConstants.BUCKET_SERVO_RIGHT_GOAL_TOP;
+            bucketServoLeftPosition = 1 - bucketServoRightPosition;
+            bucketServoRight.setPosition(bucketServoRightPosition);
+            bucketServoLeft.setPosition(bucketServoLeftPosition);
+            wormMotor.setTargetPosition(StemperFiConstants.WORM_MOTOR_GOAL_TOP);
+            wormMotor.setPower(1);
+            wormMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            sleep(2000);
+
+            bucketServoRightPosition = StemperFiConstants.BUCKET_SERVO_RIGHT_GOAL_TOP_AUTO;
+            bucketServoLeftPosition = 1 - bucketServoRightPosition;
+            bucketServoRight.setPosition(bucketServoRightPosition);
+            bucketServoLeft.setPosition(bucketServoLeftPosition);
+
+
+
+
+            intakeServoSpeed = StemperFiConstants.INTAKE_SERVO_SPEED_OUT;
+            sleep(2000);
+            intakeServo.setPosition(intakeServoSpeed);
+*/
+
+            //sleep(4000);
+            turnRight( 90, .5);
+            slideLeftTime(1600, .6);
+    sleep(1000);
+
+
+            //Moves the robot towards the depot
+            moveBackwardsMM(900,-.5);
+
+
+            //Moves the arm and the servo to the intake position
+            wormMotor.setTargetPosition(StemperFiConstants.WORM_MOTOR_INTAKE+50);
+            wormMotor.setPower(1);
+            wormMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            bucketServoRightPosition = StemperFiConstants.BUCKET_SERVO_RIGHT_INTAKE;
+            bucketServoLeftPosition = 1 - bucketServoRightPosition;
+            bucketServoRight.setPosition(bucketServoRightPosition);
+            bucketServoLeft.setPosition(bucketServoLeftPosition);
+            sleep(2000);
+
+            //Turns the intake on and moves the robot into the blocks
+            intakeServoSpeed = StemperFiConstants.INTAKE_SERVO_SPEED_IN;
+            intakeServo.setPosition(intakeServoSpeed);
+            moveForwardMM(800,.3);
+
+
+            //Spits out any double blocks
+            //intakeServoSpeed = StemperFiConstants.INTAKE_SERVO_SPEED_OUT;
+            //intakeServo.setPosition(intakeServoSpeed);
+            //sleep(500);
+            //Turns the intake off
+            intakeServoSpeed = StemperFiConstants.INTAKE_SERVO_SPEED_OFF;
+            intakeServo.setPosition(intakeServoSpeed);
+
+            //Realign the robot by bumping it up against the wall
+            slideLeftTime(500, .5);
+
+            //Moves the arm and the servo to the top goal position
+            bucketServoRightPosition = StemperFiConstants.BUCKET_SERVO_RIGHT_GOAL_TOP;
+            bucketServoLeftPosition = 1 - bucketServoRightPosition;
+            bucketServoRight.setPosition(bucketServoRightPosition);
+            bucketServoLeft.setPosition(bucketServoLeftPosition);
+            wormMotor.setTargetPosition(StemperFiConstants.WORM_MOTOR_GOAL_TOP);
+            wormMotor.setPower(1);
+            wormMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+            //Moves the robot out of the depot aligns it with the team hub
+            moveForwardMM(950,-.7);
+            slideRightTime(500,.5);
+            turnLeft( 32, .5);
+            moveForwardMM(460,-.7);
+
+            bucketServoRightPosition = StemperFiConstants.BUCKET_SERVO_RIGHT_GOAL_TOP_AUTO;
+            bucketServoLeftPosition = 1 - bucketServoRightPosition;
+            bucketServoRight.setPosition(bucketServoRightPosition);
+            bucketServoLeft.setPosition(bucketServoLeftPosition);
+
+            sleep(2000);
+
+            intakeServoSpeed = StemperFiConstants.INTAKE_SERVO_SPEED_OUT;
+            intakeServo.setPosition(intakeServoSpeed);
+
+
+            sleep(2000);
+
+            intakeServoSpeed = StemperFiConstants.INTAKE_SERVO_SPEED_OFF;
+            intakeServo.setPosition(intakeServoSpeed);
+
+            moveForwardMM(370,.7);
+            turnRight(34,.5);
+            slideLeftTime(500,.5);
+            moveForwardMM(720,.7);
+
+            //Moves the arm and the servo to the intake position
+            wormMotor.setTargetPosition(StemperFiConstants.WORM_MOTOR_INTAKE+50);
+            wormMotor.setPower(1);
+            wormMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            bucketServoRightPosition = StemperFiConstants.BUCKET_SERVO_RIGHT_INTAKE;
+            bucketServoLeftPosition = 1 - bucketServoRightPosition;
+            bucketServoRight.setPosition(bucketServoRightPosition);
+            bucketServoLeft.setPosition(bucketServoLeftPosition);
+            sleep(2000);
+
+            /*
+            slideRightTime(500,.6);
+            turnLeft( 45, .5);
+            moveForwardTime(1000, -0.5);
+
+            //Moves the servo to the scoring position for the top goal
+            bucketServoRightPosition = StemperFiConstants.BUCKET_SERVO_RIGHT_GOAL_TOP_AUTO;
+            bucketServoLeftPosition = 1 - bucketServoRightPosition;
+            bucketServoRight.setPosition(bucketServoRightPosition);
+            bucketServoLeft.setPosition(bucketServoLeftPosition);
+
+            //Outtake the block
+            intakeServoSpeed = StemperFiConstants.INTAKE_SERVO_SPEED_OUT;
+            intakeServo.setPosition(intakeServoSpeed);
+            sleep(2000);
+
+             //Moves the robot back to the wall and into the depot
+             moveForwardTime(2000, 0.5);
+             turnRight(45,.8);
+             slideLeftTime(500,.6);
+             moveForwardTime(2000, 0.5);
+*/
+
+            /*
             bucketServoRightPosition = StemperFiConstants.BUCKET_SERVO_RIGHT_GOAL_TOP;
             bucketServoLeftPosition = 1 - bucketServoRightPosition;
             bucketServoRight.setPosition(bucketServoRightPosition);
@@ -133,7 +330,10 @@ public class AutoMeet2 extends LinearOpMode {
             }
             pullUpEncoders();
             moveForwardTime(1500, -.8);
-
+*/
+        }
+        while (opModeIsActive()) {
+            sleep(100);
         }
     }
 

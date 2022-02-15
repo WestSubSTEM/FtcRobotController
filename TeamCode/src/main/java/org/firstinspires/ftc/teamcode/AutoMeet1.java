@@ -11,7 +11,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import edu.spa.ftclib.internal.drivetrain.MecanumDrivetrain;
-
+@Disabled
 @Autonomous(name = "Park", group = "Meet1")
 public class AutoMeet1 extends LinearOpMode {
 

@@ -7,7 +7,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 
 import edu.spa.ftclib.internal.drivetrain.MecanumDrivetrain;
 import edu.spa.ftclib.internal.state.Button;
-@Disabled
+
 @TeleOp(name = "Drive Only", group = "Backup")
 public class Drive extends OpMode {
     // Drivetrain Motors

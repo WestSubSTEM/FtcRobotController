@@ -7,6 +7,8 @@ public class StemperFiConstants {
     public static final long TICKS_PER_MM = Math.round(36400 /600);
     public static final int MM_PER_SQUARE = 600;
 
+
+
     public static final int TICKS_PER_DEGREE = 210;
 
     public static final int RED = Color.rgb(200, 0, 0);
@@ -73,4 +75,8 @@ public class StemperFiConstants {
 
     public static final double WOBBLE_SERVO_OPEN = 0;
     public static final double WOBBLE_SERVO_CLOSE = 0.59;
+
+    public static final double MID_SERVO_SCORE = 0.3099;
+    public static final double BOTTOM_SERVO_SCORE = 0.1749;
+    public static final int BOTTOM_WORM_GEAR = - 6189;
 }
