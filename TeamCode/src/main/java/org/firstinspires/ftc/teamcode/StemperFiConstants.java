@@ -30,7 +30,7 @@ public class StemperFiConstants {
     public static final double ENCODER_SERVO_TELE_LEFT = 0.78;
     public static final double ENCODER_SERVO_TELE_CENTER = 0.75;
 
-    public static final double ENCODER_SERVO_AUT0_RIGHT = 0.8;
+    public static final double ENCODER_SERVO_AUT0_RIGHT = 1;
     public static final double ENCODER_SERVO_AUT0_LEFT = 0.4;
     public static final double ENCODER_SERVO_AUT0_CENTER = 0.42;
 
@@ -40,7 +40,7 @@ public class StemperFiConstants {
 
     public static final double BUCKET_SERVO_RIGHT_INTAKE =.21;
 
-    public static final int WORM_MOTOR_INTAKE = -183;
+    public static final int WORM_MOTOR_INTAKE = -240;
 
     public static final double BUCKET_SERVO_RIGHT_GOAL_TOP_AUTO = .55;
     public static final double BUCKET_SERVO_RIGHT_GOAL_TOP = .35;
@@ -79,4 +79,12 @@ public class StemperFiConstants {
     public static final double MID_SERVO_SCORE = 0.3099;
     public static final double BOTTOM_SERVO_SCORE = 0.1749;
     public static final int BOTTOM_WORM_GEAR = - 6189;
+
+    //These are from the robots perspective from the back (the camera is on the left of the robot)
+    public static final double CAM_MIDDLE_BLUE = .68;
+    public static final double CAM_RIGHT_BLUE = .7;
+    public static final double CAM_LEFT_BLUE = .56;
+    public static final double CAM_MIDDLE_RED = .7;
+    public static final double CAM_RIGHT_RED = .77;
+    public static final double CAM_LEFT_RED = .65;
 }

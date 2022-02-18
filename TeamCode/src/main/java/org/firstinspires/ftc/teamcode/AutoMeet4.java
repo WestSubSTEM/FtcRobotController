@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
+import android.telecom.RemoteConnection;
+
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -10,11 +12,70 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.TouchSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.firstinspires.ftc.robotcore.external.ClassFactory;
+import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
+import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
+import org.firstinspires.ftc.robotcore.external.tfod.Recognition;
+import org.firstinspires.ftc.robotcore.external.tfod.TFObjectDetector;
+
+import java.util.List;
+
 import edu.spa.ftclib.internal.drivetrain.MecanumDrivetrain;
 import edu.spa.ftclib.internal.state.Button;
 
+enum SCORE_LEVEL { BOTTOM, MIDDLE, TOP};
+
 @Autonomous(name = "Qual Auto", group = "Meet4")
 public class AutoMeet4 extends LinearOpMode {
+
+    /* Note: This sample uses the all-objects Tensor Flow model (FreightFrenzy_BCDM.tflite), which contains
+     * the following 4 detectable objects
+     *  0: Ball,
+     *  1: Cube,
+     *  2: Duck,
+     *  3: Marker (duck location tape marker)
+     *
+     *  Two additional model assets are available which only contain a subset of the objects:
+     *  FreightFrenzy_BC.tflite  0: Ball,  1: Cube
+     *  FreightFrenzy_DM.tflite  0: Duck,  1: Marker
+     */
+    private static final String TFOD_MODEL_ASSET = "FreightFrenzy_BCDM.tflite";
+    private static final String[] LABELS = {
+            "Ball",
+            "Cube",
+            "Duck",
+            "Marker"
+    };
+
+    /*
+     * IMPORTANT: You need to obtain your own license key to use Vuforia. The string below with which
+     * 'parameters.vuforiaLicenseKey' is initialized is for illustration only, and will not function.
+     * A Vuforia 'Development' license key, can be obtained free of charge from the Vuforia developer
+     * web site at https://developer.vuforia.com/license-manager.
+     *
+     * Vuforia license keys are always 380 characters long, and look as if they contain mostly
+     * random data. As an example, here is a example of a fragment of a valid key:
+     *      ... yIgIzTqZ4mWjk9wd3cZO9T1axEqzuhxoGlfOOI2dRzKS4T0hQ8kT ...
+     * Once you've obtained a license key, copy the string from the Vuforia web site
+     * and paste it in to your code on the next line, between the double quotes.
+     */
+    private static final String VUFORIA_KEY = "AX1i8eX/////AAABmWxmpSzWhkrBq3IbwZJLUDEeUnOp590oRBme7O5f/7Sw5UCL2QQW380PuNpvYWPfvmIpqZbSlpOrBYLUFx6G8Tfckm0VAvn8b7cSsdsTWPjNHDT2q3K2XkK6QzrYDzSzdoZxUXvID3mHbau941OtxGBXWEz5ymGxt3akY7YxLB0SjqFNcI64HUKBSjDz6KoH3Pdv2FbEOQcchicJSqM9jAsQNphcB/64OvPLUaGdFwB8qgMBUK9bc+K7IK5SsspqpIBoMrJMnJgr5ag0Mj1IKn3ujpLsZm1dKUVEVD0PDkBV9lv1gijHHIlqDCOtkGz6Ev8Kr20p47fouwP2Tu2e9CEcQPj2pulf0TlecmbHxGow";
+    /**
+     * {@link #vuforia} is the variable we will use to store our instance of the Vuforia
+     * localization engine.
+     */
+    private VuforiaLocalizer vuforia;
+
+    /**
+     * {@link #tfod} is the variable we will use to store our instance of the TensorFlow Object
+     * Detection engine.
+     */
+    private TFObjectDetector tfod;
+
+    private Recognition duckRecognition = null;
+
+    private SCORE_LEVEL autoScoreLevel = SCORE_LEVEL.BOTTOM;
+
 
     private ElapsedTime runtime = new ElapsedTime();
 
@@ -36,13 +97,13 @@ public class AutoMeet4 extends LinearOpMode {
     //public int bucketMotorPosition = 0;
 
     private Servo encoderServoRight, encoderServoLeft, encoderServoCenter;
-    private Servo bucketServoLeft, bucketServoRight;
+    private Servo bucketServoLeft, bucketServoRight, webcamServo;
     private double bucketServoRightPosition = StemperFiConstants.BUCKET_SERVO_RIGHT_INIT;
     private double bucketServoLeftPosition = 1 - bucketServoRightPosition;
 
     private int MM_TO_TOWER_TOP = 450;
-    private int MM_TO_TOWER_MIDDLE = 450 - 160;
-    private int MM_TO_TOWER_BOTTOM = 450 - 140 ;
+    private int MM_TO_TOWER_MIDDLE = 450 - 180;
+    private int MM_TO_TOWER_BOTTOM = 450 - 284 ;
 
     // Drivetrain Motors
     public DcMotor frontLeft;
@@ -63,128 +124,173 @@ public class AutoMeet4 extends LinearOpMode {
     public Button dPadDownButton = new Button();
 
     public boolean isBlue = true;
+    public double webcamServoPosition = StemperFiConstants.CAM_MIDDLE_BLUE;
     public int wait = 0;
 
     @Override
     public void runOpMode() throws InterruptedException {
         initRobot();
         stopAndReset();
-//        boolean dingo = true;
-//        while(dingo) {
-//            telemetry.addData("left: ", frontLeft.getCurrentPosition());
-//            telemetry.addData("right: ", frontRight.getCurrentPosition());
-//            telemetry.update();
-//        }
-
 
         telemetry.addData("Waiting for Start!", "!!!!");
         telemetry.update();
         waitForStart();
+        telemetry.addData("Started!", "!!!!");
+        telemetry.update();
 
         if (wait > 0) {
             sleep(1_000 * wait);
         }
 
         if (opModeIsActive()) {
-
+            if (isBlue) {
+                autoScoreLevel = SCORE_LEVEL.BOTTOM;
+            } else {
+                autoScoreLevel = SCORE_LEVEL.TOP;
+            }
+            int imageChecks = 10;
+            duckRecognition = null;
+            for(int i = 0; i < imageChecks && duckRecognition == null; i++) {
+                telemetry.addData("Image Check: ", i);
+                telemetry.addData("Score Level: ", autoScoreLevel.name());
+                telemetry.update();
+                detectObjects();
+                if (duckRecognition != null) {
+                    if (duckRecognition.getLeft() < 300) {
+                        if (isBlue) {
+                            autoScoreLevel = SCORE_LEVEL.MIDDLE;
+                        } else {
+                            autoScoreLevel = SCORE_LEVEL.BOTTOM;
+                        }
+                    } else {
+                        if (isBlue) {
+                            autoScoreLevel = SCORE_LEVEL.TOP;
+                        } else {
+                            autoScoreLevel = SCORE_LEVEL.MIDDLE;
+                        }
+                    }
+                } else {
+                    sleep(10);
+                }
+                telemetry.addData("Image Check: ", i);
+                telemetry.addData("Score Level: ", autoScoreLevel.name());
+                telemetry.update();
+            }
+            sleep(20_000);
+            if (true) {
+                return;
+            }
             int slideTime = 1600;
             double powSlide = .4;
 
+            if(isBlue) {
+                slideLeftTime(slideTime,powSlide);
+            }
+            else
+                slideRightTime(slideTime,powSlide);
+
 //SCORING BOTTOM OF HUB AUTO
-            /*
-            slideLeftTime(slideTime,powSlide);
-            moveBackwardsMM(MM_TO_TOWER_BOTTOM, .4);
-            bucketServoRightPosition = StemperFiConstants.BOTTOM_SERVO_SCORE;
-            bucketServoLeftPosition = 1 - bucketServoRightPosition;
-            bucketServoRight.setPosition(bucketServoRightPosition);
-            bucketServoLeft.setPosition(bucketServoLeftPosition);
-            wormMotor.setTargetPosition(StemperFiConstants.BOTTOM_WORM_GEAR);
-            wormMotor.setPower(1);
-            wormMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-            sleep(2000);
+
+            if (autoScoreLevel == SCORE_LEVEL.BOTTOM) {
+
+
+                moveBackwardsMM(MM_TO_TOWER_BOTTOM, .4);
+                bucketServoRightPosition = StemperFiConstants.BOTTOM_SERVO_SCORE;
+                bucketServoLeftPosition = 1 - bucketServoRightPosition;
+                bucketServoRight.setPosition(bucketServoRightPosition);
+                bucketServoLeft.setPosition(bucketServoLeftPosition);
+                wormMotor.setTargetPosition(StemperFiConstants.BOTTOM_WORM_GEAR);
+                wormMotor.setPower(1);
+                wormMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                sleep(2000);
 
 
 
 
-            sleep(1000);
+                sleep(1000);
 
-            intakeServoSpeed = StemperFiConstants.INTAKE_SERVO_SPEED_OUT;
-            intakeServo.setPosition(intakeServoSpeed);
+                intakeServoSpeed = StemperFiConstants.INTAKE_SERVO_SPEED_OUT;
+                intakeServo.setPosition(intakeServoSpeed);
 
-            sleep (1000);
+                sleep (2000);
 
-            bucketServoRightPosition = StemperFiConstants.BUCKET_SERVO_RIGHT_GOAL_MIDDLE;
-            bucketServoLeftPosition = 1 - bucketServoRightPosition;
-            bucketServoRight.setPosition(bucketServoRightPosition);
-            bucketServoLeft.setPosition(bucketServoLeftPosition);
+                bucketServoRightPosition = StemperFiConstants.BUCKET_SERVO_RIGHT_GOAL_MIDDLE;
+                bucketServoLeftPosition = 1 - bucketServoRightPosition;
+                bucketServoRight.setPosition(bucketServoRightPosition);
+                bucketServoLeft.setPosition(bucketServoLeftPosition);
 
-            intakeServo.setPosition(intakeServoSpeed);
-            */
+                intakeServo.setPosition(.5);
 
-            //SCORING MIDDLE OF HUB AUTO
+            } else if (autoScoreLevel == SCORE_LEVEL.MIDDLE) {
+                moveBackwardsMM(MM_TO_TOWER_MIDDLE, .4);
+                bucketServoRightPosition = StemperFiConstants.BUCKET_SERVO_RIGHT_GOAL_MIDDLE;
+                bucketServoLeftPosition = 1 - bucketServoRightPosition;
+                bucketServoRight.setPosition(bucketServoRightPosition);
+                bucketServoLeft.setPosition(bucketServoLeftPosition);
+                wormMotor.setTargetPosition(StemperFiConstants.WORM_MOTOR_GOAL_MIDDLE);
+                wormMotor.setPower(1);
+                wormMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                sleep(2000);
 
-            slideLeftTime(slideTime,powSlide);
-            moveBackwardsMM(MM_TO_TOWER_MIDDLE, .4);
-            /*
-            bucketServoRightPosition = StemperFiConstants.BUCKET_SERVO_RIGHT_GOAL_MIDDLE;
-            bucketServoLeftPosition = 1 - bucketServoRightPosition;
-            bucketServoRight.setPosition(bucketServoRightPosition);
-            bucketServoLeft.setPosition(bucketServoLeftPosition);
-            wormMotor.setTargetPosition(StemperFiConstants.WORM_MOTOR_GOAL_MIDDLE);
-            wormMotor.setPower(1);
-            wormMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-            sleep(2000);
-
-            bucketServoRightPosition = StemperFiConstants.MID_SERVO_SCORE;
-            bucketServoLeftPosition = 1 - bucketServoRightPosition;
-            bucketServoRight.setPosition(bucketServoRightPosition);
-            bucketServoLeft.setPosition(bucketServoLeftPosition);
+                bucketServoRightPosition = StemperFiConstants.MID_SERVO_SCORE;
+                bucketServoLeftPosition = 1 - bucketServoRightPosition;
+                bucketServoRight.setPosition(bucketServoRightPosition);
+                bucketServoLeft.setPosition(bucketServoLeftPosition);
 
 
-            sleep(1000);
+                sleep(1500);
 
-            intakeServoSpeed = StemperFiConstants.INTAKE_SERVO_SPEED_OUT;
-            intakeServo.setPosition(intakeServoSpeed);
+                intakeServoSpeed = StemperFiConstants.INTAKE_SERVO_SPEED_OUT;
+                intakeServo.setPosition(intakeServoSpeed);
 
-            sleep (1000);
+                sleep (1000);
 
-            bucketServoRightPosition = StemperFiConstants.BUCKET_SERVO_RIGHT_GOAL_MIDDLE;
-            bucketServoLeftPosition = 1 - bucketServoRightPosition;
-            bucketServoRight.setPosition(bucketServoRightPosition);
-            bucketServoLeft.setPosition(bucketServoLeftPosition);
+                bucketServoRightPosition = StemperFiConstants.BUCKET_SERVO_RIGHT_GOAL_MIDDLE;
+                bucketServoLeftPosition = 1 - bucketServoRightPosition;
+                bucketServoRight.setPosition(bucketServoRightPosition);
+                bucketServoLeft.setPosition(bucketServoLeftPosition);
 
-            intakeServo.setPosition(.5);
+                intakeServo.setPosition(.5);
 
-                */
-            // SCORING TOP OF HUB AUTO
-           /* slideLeftTime(slideTime,powSlide);
-            moveBackwardsMM(MM_TO_TOWER_TOP, .4);
-            bucketServoRightPosition = StemperFiConstants.BUCKET_SERVO_RIGHT_GOAL_TOP;
-            bucketServoLeftPosition = 1 - bucketServoRightPosition;
-            bucketServoRight.setPosition(bucketServoRightPosition);
-            bucketServoLeft.setPosition(bucketServoLeftPosition);
-            wormMotor.setTargetPosition(StemperFiConstants.WORM_MOTOR_GOAL_TOP);
-            wormMotor.setPower(1);
-            wormMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-            sleep(2000);
+            } else {
 
-            bucketServoRightPosition = StemperFiConstants.BUCKET_SERVO_RIGHT_GOAL_TOP_AUTO;
-            bucketServoLeftPosition = 1 - bucketServoRightPosition;
-            bucketServoRight.setPosition(bucketServoRightPosition);
-            bucketServoLeft.setPosition(bucketServoLeftPosition);
+                moveBackwardsMM(MM_TO_TOWER_TOP, .4);
+                bucketServoRightPosition = StemperFiConstants.BUCKET_SERVO_RIGHT_GOAL_TOP;
+                bucketServoLeftPosition = 1 - bucketServoRightPosition;
+                bucketServoRight.setPosition(bucketServoRightPosition);
+                bucketServoLeft.setPosition(bucketServoLeftPosition);
+                wormMotor.setTargetPosition(StemperFiConstants.WORM_MOTOR_GOAL_TOP);
+                wormMotor.setPower(1);
+                wormMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                sleep(2000);
 
+                bucketServoRightPosition = StemperFiConstants.BUCKET_SERVO_RIGHT_GOAL_TOP_AUTO;
+                bucketServoLeftPosition = 1 - bucketServoRightPosition;
+                bucketServoRight.setPosition(bucketServoRightPosition);
+                bucketServoLeft.setPosition(bucketServoLeftPosition);
 
+                sleep(1000);
 
+                intakeServoSpeed = StemperFiConstants.INTAKE_SERVO_SPEED_OUT;
+                sleep(2000);
+                intakeServo.setPosition(intakeServoSpeed);
+                intakeServo.setPosition(.5);
 
-            intakeServoSpeed = StemperFiConstants.INTAKE_SERVO_SPEED_OUT;
-            sleep(2000);
-            intakeServo.setPosition(intakeServoSpeed);
-*/
+            }
 
-            //sleep(4000);
-            turnRight( 90, .5);
-            slideLeftTime(1600, .6);
-    sleep(1000);
+            if(isBlue)
+            {
+                turnRight( 90, .5);
+                slideLeftTime(1600, .6);
+                sleep(1000);
+
+            }
+            else
+            {
+                turnLeft(90,.5);
+                slideRightTime(1600,.6);
+                sleep(500);
+            }
 
 
             //Moves the robot towards the depot
@@ -192,7 +298,7 @@ public class AutoMeet4 extends LinearOpMode {
 
 
             //Moves the arm and the servo to the intake position
-            wormMotor.setTargetPosition(StemperFiConstants.WORM_MOTOR_INTAKE+50);
+            wormMotor.setTargetPosition(StemperFiConstants.WORM_MOTOR_INTAKE);
             wormMotor.setPower(1);
             wormMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
             bucketServoRightPosition = StemperFiConstants.BUCKET_SERVO_RIGHT_INTAKE;
@@ -215,8 +321,11 @@ public class AutoMeet4 extends LinearOpMode {
             intakeServoSpeed = StemperFiConstants.INTAKE_SERVO_SPEED_OFF;
             intakeServo.setPosition(intakeServoSpeed);
 
+            if(isBlue)
             //Realign the robot by bumping it up against the wall
             slideLeftTime(500, .5);
+            else
+                slideRightTime(500,.5);
 
             //Moves the arm and the servo to the top goal position
             bucketServoRightPosition = StemperFiConstants.BUCKET_SERVO_RIGHT_GOAL_TOP;
@@ -229,8 +338,17 @@ public class AutoMeet4 extends LinearOpMode {
 
             //Moves the robot out of the depot aligns it with the team hub
             moveForwardMM(950,-.7);
-            slideRightTime(500,.5);
-            turnLeft( 32, .5);
+            if(isBlue)
+            {
+                slideRightTime(500,.5);
+                turnLeft( 38, .5);
+            }
+            else
+                {
+                slideLeftTime(500,.5);
+                turnRight(38,.5);
+                }
+
             moveForwardMM(460,-.7);
 
             bucketServoRightPosition = StemperFiConstants.BUCKET_SERVO_RIGHT_GOAL_TOP_AUTO;
@@ -250,12 +368,18 @@ public class AutoMeet4 extends LinearOpMode {
             intakeServo.setPosition(intakeServoSpeed);
 
             moveForwardMM(370,.7);
-            turnRight(34,.5);
-            slideLeftTime(500,.5);
-            moveForwardMM(720,.7);
+            if(isBlue) {
+                turnRight(38, .5);
+                slideLeftTime(500, .5);
+            }
+            else{
+                turnLeft(38,.5);
+                slideLeftTime(500,.5);
+            }
+            moveForwardMM(780,.7);
 
             //Moves the arm and the servo to the intake position
-            wormMotor.setTargetPosition(StemperFiConstants.WORM_MOTOR_INTAKE+50);
+            wormMotor.setTargetPosition(StemperFiConstants.WORM_MOTOR_INTAKE);
             wormMotor.setPower(1);
             wormMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
             bucketServoRightPosition = StemperFiConstants.BUCKET_SERVO_RIGHT_INTAKE;
@@ -367,6 +491,7 @@ public class AutoMeet4 extends LinearOpMode {
         turntableMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         turntableMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
+        webcamServo = hardwareMap.get(Servo.class, "cameraServo");
 
         topLEDStrip = hardwareMap.get(QwiicLEDStrip.class, "TopLED");
         topLEDStrip.turnAllOff();
@@ -392,7 +517,31 @@ public class AutoMeet4 extends LinearOpMode {
         zeroTouchSensor = hardwareMap.get(TouchSensor.class, "zero");
         zeroLED = hardwareMap.get(LED.class, "zeroLed");
 
+        // The TFObjectDetector uses the camera frames from the VuforiaLocalizer, so we create that
+        // first.
+        initVuforia();
+        initTfod();
+
+        /**
+         * Activate TensorFlow Object Detection before we wait for the start command.
+         * Do it here so that the Camera Stream window will have the TensorFlow annotations visible.
+         **/
+        if (tfod != null) {
+            tfod.activate();
+
+            // The TensorFlow software will scale the input images from the camera to a lower resolution.
+            // This can result in lower detection accuracy at longer distances (> 55cm or 22").
+            // If your target is at distance greater than 50 cm (20") you can adjust the magnification value
+            // to artificially zoom in to the center of image.  For best results, the "aspectRatio" argument
+            // should be set to the value of the images used to create the TensorFlow Object Detection model
+            // (typically 16/9).
+            tfod.setZoom(1.2, 32.0/9.0);
+        }
+
+
+
         do {
+            webcamServo.setPosition(webcamServoPosition);
             greenButton.input(gamepad2.a);
             blueButton.input(gamepad2.x);
             redButton.input(gamepad2.b);
@@ -400,9 +549,11 @@ public class AutoMeet4 extends LinearOpMode {
             dPadDownButton.input(gamepad2.dpad_down);
             if (redButton.onPress()) {
                 isBlue = false;
+                webcamServoPosition = StemperFiConstants.CAM_MIDDLE_RED;
             }
             if (blueButton.onPress()) {
                 isBlue = true;
+                webcamServoPosition = StemperFiConstants.CAM_MIDDLE_BLUE;
             }
             if (dPadUpButton.onPress()) {
                 wait++;
@@ -414,10 +565,35 @@ public class AutoMeet4 extends LinearOpMode {
             telemetry.addData("color: ", isBlue ? "Blue" : "Red");
             telemetry.addData("wait: ", wait);
             telemetry.addData("Press Green To Arm", "!");
+            detectObjects();
+            if (duckRecognition != null) {
+                telemetry.addData("  left,top ","%.03f , %.03f",
+                        duckRecognition.getLeft(), duckRecognition.getTop());
+                telemetry.addData("  right,bottom  ", "%.03f , %.03f",
+                        duckRecognition.getRight(), duckRecognition.getBottom());
+            }
             telemetry.update();
         } while (!greenButton.isPressed());
+    }
 
-
+    public Recognition detectObjects()  {
+        List<Recognition> updatedRecognitions = null;
+        if (tfod != null) {
+            // getUpdatedRecognitions() will return null if no new information is available since
+            // the last time that call was made.
+            updatedRecognitions = tfod.getUpdatedRecognitions();
+            if (updatedRecognitions != null) {
+                //telemetry.addData("# Object Detected", updatedRecognitions.size());
+                // step through the list of recognitions and display boundary info.
+                for (Recognition recognition : updatedRecognitions) {
+                    if (recognition.getLabel().equals(LABELS[2])) {
+                        duckRecognition = recognition;
+                        return duckRecognition;
+                    }
+                }
+            }
+        }
+        return null;
     }
 
     public void turnRight(int degrees, double power) {
@@ -613,5 +789,39 @@ public class AutoMeet4 extends LinearOpMode {
             telemetry.update();
         }
     }
+
+
+    /**
+     * Initialize the Vuforia localization engine.
+     */
+    private void initVuforia() {
+        /*
+         * Configure Vuforia by creating a Parameter object, and passing it to the Vuforia engine.
+         */
+        VuforiaLocalizer.Parameters parameters = new VuforiaLocalizer.Parameters();
+
+        parameters.vuforiaLicenseKey = VUFORIA_KEY;
+        parameters.cameraName = hardwareMap.get(WebcamName.class, "Webcam 1");
+
+        //  Instantiate the Vuforia engine
+        vuforia = ClassFactory.getInstance().createVuforia(parameters);
+
+        // Loading trackables is not necessary for the TensorFlow Object Detection engine.
+    }
+
+    /**
+     * Initialize the TensorFlow Object Detection engine.
+     */
+    private void initTfod() {
+        int tfodMonitorViewId = hardwareMap.appContext.getResources().getIdentifier(
+                "tfodMonitorViewId", "id", hardwareMap.appContext.getPackageName());
+        TFObjectDetector.Parameters tfodParameters = new TFObjectDetector.Parameters(tfodMonitorViewId);
+        tfodParameters.minResultConfidence = 0.8f;
+        tfodParameters.isModelTensorFlow2 = true;
+        tfodParameters.inputSize = 320;
+        tfod = ClassFactory.getInstance().createTFObjectDetector(tfodParameters, vuforia);
+        tfod.loadModelFromAsset(TFOD_MODEL_ASSET, LABELS);
+    }
+
 
 }
