@@ -89,6 +89,8 @@ public class TeleMeet1 extends OpMode {
         double speedLimit = 0.6;
         if (gamepad1.right_bumper) {
             speedLimit = 1;
+        } else if (gamepad1.left_bumper) {
+            speedLimit = 0.25;
         }
         double course = Math.atan2(-gamepad1.right_stick_y, gamepad1.right_stick_x) - Math.PI/2;
         double velocity = Math.hypot(gamepad1.right_stick_x, gamepad1.right_stick_y) * speedLimit;

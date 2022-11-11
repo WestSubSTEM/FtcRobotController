@@ -15,7 +15,7 @@ public class StemperFiConstants {
     public static final int OFF = Color.rgb(0,0,0);
 
     public static final double GRABBER_SERVO_CLOSED = 1.0;
-    public static final double GRABBER_SERVO_OPEN = 0.6;
+    public static final double GRABBER_SERVO_OPEN = 0.7;
 
     public static final double ROTATE_SERVO_LIMIT = 0.1;
     public static final double ROTATE_SERVO_CENTER = 0.47;
