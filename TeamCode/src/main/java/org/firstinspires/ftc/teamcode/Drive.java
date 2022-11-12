@@ -72,5 +72,10 @@ public class Drive extends OpMode {
         }
         telemetry.addData("course", String.format("%.01f cm", course));
         telemetry.addData("velocity", String.format("%.01f mm", velocity));
+        telemetry.addData("fl", frontLeft.getCurrentPosition());
+        telemetry.addData("fr", frontRight.getCurrentPosition());
+        telemetry.addData("bl", backLeft.getCurrentPosition());
+        telemetry.addData("br", backRight.getCurrentPosition());
+        telemetry.update();
     }
 }

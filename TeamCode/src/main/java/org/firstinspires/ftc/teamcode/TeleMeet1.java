@@ -29,7 +29,7 @@ public class TeleMeet1 extends OpMode {
     public Servo grabberServo, rotateServo;
     private double grabberServoPosition = StemperFiConstants.GRABBER_SERVO_OPEN;
     private double rotateServoPosition = 0.5;
-
+    private boolean targetFromButton = false;
 
     private Button buttonA = new Button();
     private Button buttonB = new Button();
@@ -129,26 +129,35 @@ public class TeleMeet1 extends OpMode {
 
         float right_stick_y = -gamepad2.right_stick_y;
         if (buttonX.isPressed()) {
+            targetFromButton = true;
             liftMotorTarget = StemperFiConstants.LIFT_TICKS_LOW;
             liftMotor.setTargetPosition(liftMotorTarget);
             liftMotor.setPower(1);
         } else if (buttonY.isPressed()) {
+            targetFromButton = true;
             liftMotorTarget = StemperFiConstants.LIFT_TICKS_MED;
             liftMotor.setTargetPosition(liftMotorTarget);
             liftMotor.setPower(1);
         } else if (buttonA.isPressed() && !gamepad2.start) {
+            targetFromButton = true;
             liftMotorTarget = StemperFiConstants.LIFT_TICKS_PLATE;
             liftMotor.setTargetPosition(liftMotorTarget);
             liftMotor.setPower(1);
         } else if (buttonB.isPressed() && !gamepad2.start) {
+            targetFromButton = true;
             liftMotorTarget = StemperFiConstants.LIFT_TICKS_HIGH;
             liftMotor.setTargetPosition(liftMotorTarget);
             liftMotor.setPower(1);
         } if (gamepad2.left_trigger > 0.8 && gamepad2.right_trigger > 0.8) {
+            targetFromButton = true;
             liftMotorTarget = 0;
             liftMotor.setTargetPosition(liftMotorTarget);
             liftMotor.setPower(1);
         } else if (Math.abs(right_stick_y) > 0.2) {
+            if (targetFromButton) {
+                targetFromButton = false;
+                liftMotorTarget = liftMotor.getCurrentPosition();
+            }
             liftMotorTarget = liftMotorTarget + Math.round(right_stick_y * 50.0f);
             liftMotorTarget = Math.max(0, liftMotorTarget);
             liftMotorTarget = Math.min(liftMotorTarget, StemperFiConstants.LIFT_TICKS_MAX);
