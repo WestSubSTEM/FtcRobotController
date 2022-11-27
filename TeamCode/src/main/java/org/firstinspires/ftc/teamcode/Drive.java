@@ -40,7 +40,9 @@ public class Drive extends OpMode {
         drivetrain = new MecanumDrivetrain(driveMotors);
 
         liftMotor = hardwareMap.get(DcMotorEx.class, "lift");
+        liftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         liftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        liftMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
     }
 
@@ -72,10 +74,13 @@ public class Drive extends OpMode {
         }
         telemetry.addData("course", String.format("%.01f cm", course));
         telemetry.addData("velocity", String.format("%.01f mm", velocity));
+        telemetry.addData("lift: ", liftMotor.getCurrentPosition());
+        /*
         telemetry.addData("fl", frontLeft.getCurrentPosition());
         telemetry.addData("fr", frontRight.getCurrentPosition());
         telemetry.addData("bl", backLeft.getCurrentPosition());
         telemetry.addData("br", backRight.getCurrentPosition());
+         */
         telemetry.update();
     }
 }

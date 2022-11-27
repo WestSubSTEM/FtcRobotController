@@ -21,11 +21,11 @@ public class StemperFiConstants {
     public static final double ROTATE_SERVO_CENTER = 0.47;
 
 
-    public static final int LIFT_TICKS_PLATE = 890;
-    public static final int LIFT_TICKS_LOW = 7_030;
-    public static final int LIFT_TICKS_MED = 11_200;
-    public static final int LIFT_TICKS_HIGH = 15_800;
-    public static final int LIFT_TICKS_MAX = 15_900;
+    public static final int LIFT_TICKS_PLATE = 78; //890;
+    public static final int LIFT_TICKS_LOW = 3_069; //7_030;
+    public static final int LIFT_TICKS_MED =  5_068; //11_200;
+    public static final int LIFT_TICKS_HIGH = 7_381; //15_800;
+    public static final int LIFT_TICKS_MAX = 7_500;
 
     // How many encoder ticks to move forward/backwards 1 cm
     public static final double TICKS_PER_CM = 1000.0/58.0;
