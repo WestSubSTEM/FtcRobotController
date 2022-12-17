@@ -5,6 +5,7 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DigitalChannel;
 
 import edu.spa.ftclib.internal.drivetrain.MecanumDrivetrain;
 import edu.spa.ftclib.internal.state.Button;
@@ -18,7 +19,7 @@ public class Drive extends OpMode {
     public DcMotor backRight;
     public DcMotor[] driveMotors;
     public DcMotorEx liftMotor;
-
+    public DigitalChannel magnetSwitch;
 
     // The MecanumDrivetrain courteous of HOMAR FTC library
     public MecanumDrivetrain drivetrain;
@@ -38,6 +39,13 @@ public class Drive extends OpMode {
         backRight = hardwareMap.get(DcMotor.class, "driveBackRight");
         driveMotors = new DcMotor[]{frontLeft, frontRight, backLeft, backRight};
         drivetrain = new MecanumDrivetrain(driveMotors);
+
+        // get a reference to our digitalTouch object.
+        magnetSwitch = hardwareMap.get(DigitalChannel.class, "magnet");
+
+        // set the digital channel to input.
+        magnetSwitch.setMode(DigitalChannel.Mode.INPUT);
+
 
         liftMotor = hardwareMap.get(DcMotorEx.class, "lift");
         liftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -74,7 +82,8 @@ public class Drive extends OpMode {
         }
         telemetry.addData("course", String.format("%.01f cm", course));
         telemetry.addData("velocity", String.format("%.01f mm", velocity));
-        telemetry.addData("lift: ", liftMotor.getCurrentPosition());
+        telemetry.addData("lift", liftMotor.getCurrentPosition());
+        telemetry.addData("mag", !magnetSwitch.getState());
         /*
         telemetry.addData("fl", frontLeft.getCurrentPosition());
         telemetry.addData("fr", frontRight.getCurrentPosition());

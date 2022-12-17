@@ -1,28 +1,24 @@
 package org.firstinspires.ftc.teamcode;
 
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
-import com.qualcomm.robotcore.hardware.LED;
+import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.Servo;
-import com.qualcomm.robotcore.hardware.TouchSensor;
-
-import java.util.Arrays;
 
 import edu.spa.ftclib.internal.drivetrain.MecanumDrivetrain;
 import edu.spa.ftclib.internal.state.Button;
 
-@TeleOp(name = "Meet 2 Tele", group = "Meet2")
-public class TeleMeet1 extends OpMode {
+@TeleOp(name = "Meet 2 Limit", group = "Meet2")
+public class TeleMeet2Limit extends OpMode {
     // Drivetrain Motors
     public DcMotor frontLeft;
     public DcMotor frontRight;
     public DcMotor backLeft;
     public DcMotor backRight;
     public DcMotor[] driveMotors;
+    public DigitalChannel magnetSwitch;
 
     public DcMotorEx liftMotor;
     public int liftMotorTarget = 0;
@@ -30,12 +26,15 @@ public class TeleMeet1 extends OpMode {
     private double grabberServoPosition = StemperFiConstants.GRABBER_SERVO_OPEN;
     private double rotateServoPosition = 0.5;
     private boolean targetFromButton = false;
+    private boolean isZeroSet = false;
+
 
     private Button buttonA = new Button();
     private Button buttonB = new Button();
     private Button buttonX = new Button();
     private Button buttonY = new Button();
     private Button buttonLeftStick = new Button();
+    private Button buttonMagnet = new Button();
 
     private Button bumperLeft = new Button();
     private Button bumperRight = new Button();
@@ -60,6 +59,12 @@ public class TeleMeet1 extends OpMode {
 
         driveMotors = new DcMotor[]{frontLeft, frontRight, backLeft, backRight};
         drivetrain = new MecanumDrivetrain(driveMotors);
+
+        // get a reference to our digitalTouch object.
+        magnetSwitch = hardwareMap.get(DigitalChannel.class, "magnet");
+
+        // set the digital channel to input.
+        magnetSwitch.setMode(DigitalChannel.Mode.INPUT);
 
         /*
         encoderServoLeft = hardwareMap.get(Servo.class, "encoderLeft");
@@ -86,6 +91,7 @@ public class TeleMeet1 extends OpMode {
 
     @Override
     public void loop() {
+
         // Driver 1
         double speedLimit = 0.6;
         if (gamepad1.right_bumper) {
@@ -109,6 +115,7 @@ public class TeleMeet1 extends OpMode {
         buttonX.input(gamepad2.x);
         buttonY.input(gamepad2.y);
         buttonLeftStick.input(gamepad2.left_stick_button);
+        buttonMagnet.input(!magnetSwitch.getState());
 
         bumperLeft.input(gamepad2.left_bumper);
         bumperRight.input(gamepad2.right_bumper);
@@ -130,43 +137,59 @@ public class TeleMeet1 extends OpMode {
         rotateServo.setPosition(rotateServoPosition);
 
         float right_stick_y = -gamepad2.right_stick_y;
-        if (buttonX.isPressed()) {
-            targetFromButton = true;
-            liftMotorTarget = buttonLeftStick.isPressed() ? StemperFiConstants.LIFT_TICKS_TWO : StemperFiConstants.LIFT_TICKS_LOW;
-            liftMotor.setTargetPosition(liftMotorTarget);
-            liftMotor.setPower(1);
-        } else if (buttonY.isPressed()) {
-            targetFromButton = true;
-            liftMotorTarget = buttonLeftStick.isPressed() ? StemperFiConstants.LIFT_TICKS_THREE : StemperFiConstants.LIFT_TICKS_MED;
-            liftMotor.setTargetPosition(liftMotorTarget);
-            liftMotor.setPower(1);
-        } else if (buttonA.isPressed() && !gamepad2.start) {
-            targetFromButton = true;
-            liftMotorTarget = buttonLeftStick.isPressed() ? StemperFiConstants.LIFT_TICKS_FOUR : StemperFiConstants.LIFT_TICKS_PLATE;
-            liftMotor.setTargetPosition(liftMotorTarget);
-            liftMotor.setPower(1);
-        } else if (buttonB.isPressed() && !gamepad2.start) {
-            targetFromButton = true;
-            liftMotorTarget = buttonLeftStick.isPressed() ? StemperFiConstants.LIFT_TICKS_FIVE : StemperFiConstants.LIFT_TICKS_HIGH;
-            liftMotor.setTargetPosition(liftMotorTarget);
-            liftMotor.setPower(1);
-        } if (gamepad2.left_trigger > 0.8 && gamepad2.right_trigger > 0.8) {
-            targetFromButton = true;
-            liftMotorTarget = 0;
-            liftMotor.setTargetPosition(liftMotorTarget);
-            liftMotor.setPower(1);
-        } else if (Math.abs(right_stick_y) > 0.2) {
-            if (targetFromButton) {
-                targetFromButton = false;
-                liftMotorTarget = liftMotor.getCurrentPosition();
+        if (isZeroSet) {
+            if (buttonX.isPressed()) {
+                targetFromButton = true;
+                liftMotorTarget = buttonLeftStick.isPressed() ? StemperFiConstants.LIFT_TICKS_TWO : StemperFiConstants.LIFT_TICKS_LOW;
+                liftMotor.setTargetPosition(liftMotorTarget);
+                liftMotor.setPower(1);
+            } else if (buttonY.isPressed()) {
+                targetFromButton = true;
+                liftMotorTarget = buttonLeftStick.isPressed() ? StemperFiConstants.LIFT_TICKS_THREE : StemperFiConstants.LIFT_TICKS_MED;
+                liftMotor.setTargetPosition(liftMotorTarget);
+                liftMotor.setPower(1);
+            } else if (buttonA.isPressed() && !gamepad2.start) {
+                targetFromButton = true;
+                liftMotorTarget = buttonLeftStick.isPressed() ? StemperFiConstants.LIFT_TICKS_FOUR : StemperFiConstants.LIFT_TICKS_PLATE;
+                liftMotor.setTargetPosition(liftMotorTarget);
+                liftMotor.setPower(1);
+            } else if (buttonB.isPressed() && !gamepad2.start) {
+                targetFromButton = true;
+                liftMotorTarget = buttonLeftStick.isPressed() ? StemperFiConstants.LIFT_TICKS_FIVE : StemperFiConstants.LIFT_TICKS_HIGH;
+                liftMotor.setTargetPosition(liftMotorTarget);
+                liftMotor.setPower(1);
             }
-            liftMotorTarget = liftMotorTarget + Math.round(right_stick_y * 50.0f);
-            liftMotorTarget = Math.max(0, liftMotorTarget);
-            liftMotorTarget = Math.min(liftMotorTarget, StemperFiConstants.LIFT_TICKS_MAX);
-            liftMotor.setTargetPosition(liftMotorTarget);
+            if (gamepad2.left_trigger > 0.8 && gamepad2.right_trigger > 0.8) {
+                targetFromButton = true;
+                liftMotorTarget = 0;
+                liftMotor.setTargetPosition(liftMotorTarget);
+                liftMotor.setPower(1);
+            } else if (Math.abs(right_stick_y) > 0.2) {
+                if (targetFromButton) {
+                    targetFromButton = false;
+                    liftMotorTarget = liftMotor.getCurrentPosition();
+                }
+                liftMotorTarget = liftMotorTarget + Math.round(right_stick_y * 50.0f);
+                liftMotorTarget = Math.max(0, liftMotorTarget);
+                liftMotorTarget = Math.min(liftMotorTarget, StemperFiConstants.LIFT_TICKS_MAX);
+                liftMotor.setTargetPosition(liftMotorTarget);
+            }
+        } else {
+            if (buttonMagnet.isPressed()) {
+                isZeroSet = true;
+                liftMotor.setPower(0);
+                liftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                liftMotor.setTargetPosition(0);
+                liftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                liftMotor.setPower(1);
+            } else {
+                liftMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+                liftMotor.setPower(-1);
+            }
         }
         telemetry.addData("lift Target: ", liftMotorTarget);
         telemetry.addData("lift CurPos:", liftMotor.getCurrentPosition());
+        telemetry.addData("magnet", buttonMagnet.isPressed());
         telemetry.update();
     }
 
