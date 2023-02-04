@@ -6,10 +6,11 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
+import com.qualcomm.robotcore.hardware.Servo;
 
 import edu.spa.ftclib.internal.drivetrain.MecanumDrivetrain;
 import edu.spa.ftclib.internal.state.Button;
-
+@Disabled
 @TeleOp(name = "Drive Only", group = "Backup")
 public class Drive extends OpMode {
     // Drivetrain Motors
@@ -19,7 +20,11 @@ public class Drive extends OpMode {
     public DcMotor backRight;
     public DcMotor[] driveMotors;
     public DcMotorEx liftMotor;
-    public DigitalChannel magnetSwitch;
+    //public DigitalChannel magnetSwitch;
+    public Servo grabberServo, rotateServo, angleServo;
+    private double grabberServoPosition = StemperFiConstants.GRABBER_SERVO_OPEN;
+    private double angleServoPosition = StemperFiConstants.ANGLE_SERVO_FLAT;
+    private double rotateServoPosition = StemperFiConstants.ROTATE_SERVO_FRONT;
 
     // The MecanumDrivetrain courteous of HOMAR FTC library
     public MecanumDrivetrain drivetrain;
@@ -41,16 +46,26 @@ public class Drive extends OpMode {
         drivetrain = new MecanumDrivetrain(driveMotors);
 
         // get a reference to our digitalTouch object.
-        magnetSwitch = hardwareMap.get(DigitalChannel.class, "magnet");
+        //magnetSwitch = hardwareMap.get(DigitalChannel.class, "magnet");
 
         // set the digital channel to input.
-        magnetSwitch.setMode(DigitalChannel.Mode.INPUT);
+        //magnetSwitch.setMode(DigitalChannel.Mode.INPUT);
 
 
         liftMotor = hardwareMap.get(DcMotorEx.class, "lift");
         liftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         liftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         liftMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+
+
+        grabberServo = hardwareMap.get(Servo.class, "pinchy");
+        grabberServo.setPosition(grabberServoPosition);
+
+        rotateServo = hardwareMap.get(Servo.class, "rotate");
+        rotateServo.setPosition(rotateServoPosition);
+
+        angleServo = hardwareMap.get(Servo.class, "angle");
+        angleServo.setPosition(angleServoPosition);
 
     }
 
@@ -83,7 +98,7 @@ public class Drive extends OpMode {
         telemetry.addData("course", String.format("%.01f cm", course));
         telemetry.addData("velocity", String.format("%.01f mm", velocity));
         telemetry.addData("lift", liftMotor.getCurrentPosition());
-        telemetry.addData("mag", !magnetSwitch.getState());
+       // telemetry.addData("mag", !magnetSwitch.getState());
         /*
         telemetry.addData("fl", frontLeft.getCurrentPosition());
         telemetry.addData("fr", frontRight.getCurrentPosition());

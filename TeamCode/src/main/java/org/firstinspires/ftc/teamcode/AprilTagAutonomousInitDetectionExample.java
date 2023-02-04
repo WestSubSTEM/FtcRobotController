@@ -43,11 +43,15 @@ import java.util.ArrayList;
 import edu.spa.ftclib.internal.drivetrain.MecanumDrivetrain;
 import edu.spa.ftclib.internal.state.Button;
 
-@Autonomous(name = "Auto Tag", group = "Meet1")
+@Autonomous(name = "Auto Tag", group = "Qual")
 public class AprilTagAutonomousInitDetectionExample extends LinearOpMode
 {
     private Button bumperLeft = new Button();
     private Button bumperRight = new Button();
+    private Button increaseSecButton = new Button();
+    private Button decreaseSecButton = new Button();
+    private Button redButton = new Button();
+    private Button blueButton = new Button();
 
     private ElapsedTime runtime = new ElapsedTime();
     // Drivetrain Motors
@@ -62,8 +66,14 @@ public class AprilTagAutonomousInitDetectionExample extends LinearOpMode
     // The MecanumDrivetrain courteous of HOMAR FTC library
     public MecanumDrivetrain drivetrain;
 
-    public Servo grabberServo, rotateServo;
-    private double grabberServoPosition = StemperFiConstants.GRABBER_SERVO_OPEN;
+    public DcMotorEx liftMotor;
+    public int liftMotorTarget = 0;
+    public Servo grabberServo, rotateServo, angleServo;
+    public double grabberServoPosition = StemperFiConstants.GRABBER_SERVO_OPEN;
+    public double angleServoPosition = StemperFiConstants.ANGLE_SERVO_FLAT;
+    public double rotateServoPosition = StemperFiConstants.ROTATE_SERVO_FRONT;
+    public double rotateServoTarget = rotateServoPosition;
+    public boolean isRight = true;
 
     OpenCvCamera camera;
     AprilTagDetectionPipeline aprilTagDetectionPipeline;
@@ -88,6 +98,39 @@ public class AprilTagAutonomousInitDetectionExample extends LinearOpMode
 
     AprilTagDetection tagOfInterest = null;
 
+    int delaySeconds = 0;
+
+    private void rotateCW(int degrees, double power) {
+        rotateCCW(degrees, -power);
+    }
+
+    private void rotateCCW(int degrees, double power) {
+        int ticks = (20_000 / 90) * degrees;
+        stopAndReset();
+        backRight.setPower(power);
+        frontRight.setPower(power);
+        frontLeft.setPower(-power);
+        backLeft.setPower(-power);
+        long cpMax = 0;
+        long cpr = 0;
+        long cpl = 0;
+        long cpb = 0;
+        do {
+            cpr = Math.abs(rightEncoder.getCurrentPosition());
+            cpl = Math.abs(leftEncoder.getCurrentPosition());
+            cpb = Math.abs(backEncoder.getCurrentPosition());
+            cpMax = Math.max(cpr, cpl);
+            telemetry.addData("bw   cpr: ", cpr);
+            telemetry.addData("bw   cpl: ", cpl);
+            telemetry.addData("bw  back:", cpb);
+            telemetry.addData("bw cpMax: ", cpMax);
+            telemetry.addData("bw    tp: ", ticks);
+            telemetry.update();
+        } while (cpMax < ticks && opModeIsActive());
+        stopAndReset();
+
+    }
+
     private void initRobot() {
 
         // Setup the drivetrain
@@ -100,17 +143,26 @@ public class AprilTagAutonomousInitDetectionExample extends LinearOpMode
 
         driveMotors = new DcMotor[]{frontLeft, frontRight, backLeft, backRight};
         drivetrain = new MecanumDrivetrain(driveMotors);
+        stopAndReset();
 
-        rightEncoder = backLeft;
-        leftEncoder = backRight;
+        rightEncoder = backRight;
+        leftEncoder = backLeft;
         backEncoder = frontRight;
+
+        liftMotor = hardwareMap.get(DcMotorEx.class, "lift");
+        liftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        liftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        liftMotor.setTargetPosition(liftMotorTarget);
+        liftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
         grabberServo = hardwareMap.get(Servo.class, "pinchy");
         grabberServo.setPosition(grabberServoPosition);
 
-        rotateServo = hardwareMap.get(Servo.class, "rotoPinchy");
-        grabberServo.setPosition(grabberServoPosition);
-        stopAndReset();
+        rotateServo = hardwareMap.get(Servo.class, "rotate");
+        rotateServo.setPosition(rotateServoPosition);
+
+        angleServo = hardwareMap.get(Servo.class, "angle");
+        angleServo.setPosition(angleServoPosition);
     }
 
     public void stopAndReset() {
@@ -125,18 +177,26 @@ public class AprilTagAutonomousInitDetectionExample extends LinearOpMode
     public void moveForwardMM(long mm, double power) {
         long ticks = mm * StemperFiConstants.TICKS_PER_MM;
         stopAndReset();
+        backLeft.setPower(power);
+        frontLeft.setPower(power);
+
+        frontRight.setPower(power * 0.6);
+        backRight.setPower(power * 0.6);
         for (DcMotor motor : driveMotors) {
             motor.setPower(power);
         }
         long cpMax = 0;
         long cpr = 0;
         long cpl = 0;
+        long cpb = 0;
         do {
             cpr = Math.abs(rightEncoder.getCurrentPosition());
             cpl = Math.abs(leftEncoder.getCurrentPosition());
+            cpb = Math.abs(backEncoder.getCurrentPosition());
             cpMax = Math.max(cpr, cpl);
             telemetry.addData("bw   cpr: ", cpr);
             telemetry.addData("bw   cpl: ", cpl);
+            telemetry.addData("bw  back:", cpb);
             telemetry.addData("bw cpMax: ", cpMax);
             telemetry.addData("bw    tp: ", ticks);
             telemetry.update();
@@ -214,6 +274,30 @@ public class AprilTagAutonomousInitDetectionExample extends LinearOpMode
             }
             grabberServo.setPosition(grabberServoPosition);
 
+            increaseSecButton.input(gamepad2.y);
+            decreaseSecButton.input(gamepad2.a);
+            if (increaseSecButton.onPress())  {
+                delaySeconds++;
+            }
+            if (decreaseSecButton.onPress()) {
+                delaySeconds--;
+            }
+            delaySeconds = Math.max(0, delaySeconds);
+            delaySeconds = Math.min(20, delaySeconds);
+            telemetry.addData("Delay Seconds: ", delaySeconds);
+
+            if (redButton.onPress()) {
+                isRight = false;
+            }
+            if (blueButton.onPress()) {
+                isRight = true;
+            }
+            if (isRight) {
+                telemetry.addLine("Left Side of Field");
+            } else {
+                telemetry.addLine("Right Side of Field ");
+            }
+
             ArrayList<AprilTagDetection> currentDetections = aprilTagDetectionPipeline.getLatestDetections();
 
             if(currentDetections.size() != 0)
@@ -289,13 +373,22 @@ public class AprilTagAutonomousInitDetectionExample extends LinearOpMode
 //            telemetry.update();
 //        }
 
+        if (delaySeconds > 0) {
+            sleep(delaySeconds * 1_000);
+        }
         /* Actually do something useful */
         if(tagOfInterest != null && tagOfInterest.id == 1) {
             slideLeftTime(2_000, .4);
+            rotateCCW(5, .4);
+            moveForwardMM(900, .4);
+            slideRightTime(500, .2);
         } else if (tagOfInterest != null && tagOfInterest.id == 3) {
             slideRightTime(1_700, .4);
+            rotateCW(3, .4);
+            moveForwardMM(900, .4);
+        } else {
+            moveForwardMM(900, .4);
         }
-        moveForwardMM(700, .2);
         /* You wouldn't have this in your autonomous, this is just to prevent the sample from ending */
 
     }

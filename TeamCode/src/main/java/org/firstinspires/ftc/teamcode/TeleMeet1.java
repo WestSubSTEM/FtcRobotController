@@ -14,7 +14,7 @@ import java.util.Arrays;
 
 import edu.spa.ftclib.internal.drivetrain.MecanumDrivetrain;
 import edu.spa.ftclib.internal.state.Button;
-
+@Disabled
 @TeleOp(name = "Meet 2 Tele", group = "Meet2")
 public class TeleMeet1 extends OpMode {
     // Drivetrain Motors
@@ -123,26 +123,26 @@ public class TeleMeet1 extends OpMode {
 
         double left_stick_x = gamepad2.left_stick_x;
         if (Math.abs(left_stick_x) > 0.1) {
-            rotateServoPosition = StemperFiConstants.ROTATE_SERVO_LIMIT * left_stick_x + StemperFiConstants.ROTATE_SERVO_CENTER;
+         //   rotateServoPosition = StemperFiConstants.ROTATE_SERVO_LIMIT * left_stick_x + StemperFiConstants.ROTATE_SERVO_CENTER;
         } else {
-            rotateServoPosition = StemperFiConstants.ROTATE_SERVO_CENTER;
+          //  rotateServoPosition = StemperFiConstants.ROTATE_SERVO_CENTER;
         }
         rotateServo.setPosition(rotateServoPosition);
 
         float right_stick_y = -gamepad2.right_stick_y;
         if (buttonX.isPressed()) {
             targetFromButton = true;
-            liftMotorTarget = buttonLeftStick.isPressed() ? StemperFiConstants.LIFT_TICKS_TWO : StemperFiConstants.LIFT_TICKS_LOW;
+            liftMotorTarget = buttonLeftStick.isPressed() ? StemperFiConstants.LIFT_TICKS_THREE : StemperFiConstants.LIFT_TICKS_LOW;
             liftMotor.setTargetPosition(liftMotorTarget);
             liftMotor.setPower(1);
         } else if (buttonY.isPressed()) {
             targetFromButton = true;
-            liftMotorTarget = buttonLeftStick.isPressed() ? StemperFiConstants.LIFT_TICKS_THREE : StemperFiConstants.LIFT_TICKS_MED;
+            liftMotorTarget = buttonLeftStick.isPressed() ? StemperFiConstants.LIFT_TICKS_FOUR : StemperFiConstants.LIFT_TICKS_MED;
             liftMotor.setTargetPosition(liftMotorTarget);
             liftMotor.setPower(1);
         } else if (buttonA.isPressed() && !gamepad2.start) {
             targetFromButton = true;
-            liftMotorTarget = buttonLeftStick.isPressed() ? StemperFiConstants.LIFT_TICKS_FOUR : StemperFiConstants.LIFT_TICKS_PLATE;
+            liftMotorTarget = buttonLeftStick.isPressed() ? StemperFiConstants.LIFT_TICKS_TWO : StemperFiConstants.LIFT_TICKS_PLATE;
             liftMotor.setTargetPosition(liftMotorTarget);
             liftMotor.setPower(1);
         } else if (buttonB.isPressed() && !gamepad2.start) {

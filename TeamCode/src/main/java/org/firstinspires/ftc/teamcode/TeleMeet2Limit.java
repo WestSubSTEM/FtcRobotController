@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -9,7 +10,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 
 import edu.spa.ftclib.internal.drivetrain.MecanumDrivetrain;
 import edu.spa.ftclib.internal.state.Button;
-
+@Disabled
 @TeleOp(name = "Meet 2 Limit", group = "Meet2")
 public class TeleMeet2Limit extends OpMode {
     // Drivetrain Motors
@@ -130,9 +131,9 @@ public class TeleMeet2Limit extends OpMode {
 
         double left_stick_x = gamepad2.left_stick_x;
         if (Math.abs(left_stick_x) > 0.1) {
-            rotateServoPosition = StemperFiConstants.ROTATE_SERVO_LIMIT * left_stick_x + StemperFiConstants.ROTATE_SERVO_CENTER;
+            //rotateServoPosition = StemperFiConstants.ROTATE_SERVO_LIMIT * left_stick_x + StemperFiConstants.ROTATE_SERVO_CENTER;
         } else {
-            rotateServoPosition = StemperFiConstants.ROTATE_SERVO_CENTER;
+            //rotateServoPosition = StemperFiConstants.ROTATE_SERVO_CENTER;
         }
         rotateServo.setPosition(rotateServoPosition);
 

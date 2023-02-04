@@ -8,11 +8,11 @@ import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
-
-@TeleOp()
 @Disabled
+@TeleOp(name = "LED TEST", group = "Test")
 public class TestLEDOpMode extends OpMode {
-    private QwiicLEDStrip ledStrip;
+    private QwiicLEDStrip ledStripFront;
+    private QwiicLEDStrip ledStripBack;
     private ElapsedTime elapsedTime = new ElapsedTime();
     private int colorIndex = 0;
     private @ColorInt int[] colors = new int[] {
@@ -27,13 +27,27 @@ public class TestLEDOpMode extends OpMode {
             Color.parseColor("silver"),
             Color.rgb(0, 0, 0) };
 
+    private @ColorInt int[] direction = new int[] {
+            Color.rgb(0, 0, 0),
+            Color.rgb(0, 0, 0),
+            Color.rgb(0, 0, 0),
+            Color.rgb(0, 0, 0),
+            Color.rgb(0, 0, 0),
+            Color.rgb(0, 210, 0),
+            Color.rgb(0, 210, 0),
+            Color.rgb(0, 210, 0),
+            Color.rgb(0, 210, 0),
+            Color.rgb(0, 210, 0)};
+
     // Code to run ONCE when the driver hits INIT
     @Override
     public void init() {
-        ledStrip = hardwareMap.get(QwiicLEDStrip.class, "led_strip");
-        ledStrip.setBrightness(4);
-        ledStrip.setColor(Color.parseColor("red"));
-        ledStrip.setColor(5, Color.parseColor("blue"));
+        ledStripFront = hardwareMap.get(QwiicLEDStrip.class, "led_strip_front");
+        ledStripFront.setBrightness(2);
+        ledStripFront.setColor(Color.parseColor("purple"));
+        ledStripBack = hardwareMap.get(QwiicLEDStrip.class, "led_strip_back");
+        ledStripBack.setBrightness(2);
+        ledStripBack.setColor(Color.parseColor("blue"));
     }
 
     @Override
@@ -45,19 +59,29 @@ public class TestLEDOpMode extends OpMode {
     @Override
     public void loop() {
         if (elapsedTime.milliseconds() >= 500) {
-            if (colorIndex == colors.length) {
-                ledStrip.setColors(colors);
+            if (colorIndex == 1) {
+                ledStripFront.turnAllOff();
+                ledStripBack.setColors(direction);
                 colorIndex = 0;
             } else {
-                ledStrip.setColor(colors[colorIndex]);
+                ledStripFront.setColors(direction);
+                ledStripBack.turnAllOff();
                 colorIndex++;
             }
+//            if (colorIndex == colors.length) {
+//                ledStrip.setColors(colors);
+//                colorIndex = 0;
+//            } else {
+//                ledStrip.setColor(colors[colorIndex]);
+//                colorIndex++;
+//            }
             elapsedTime.reset();
         }
     }
 
     @Override
     public void stop() {
-        ledStrip.turnAllOff();
+        ledStripFront.turnAllOff();
+        ledStripBack.turnAllOff();
     }
 }
