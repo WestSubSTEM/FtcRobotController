@@ -29,10 +29,10 @@ public class StemperFiConstants {
     public static final int LIFT_TICKS_MAX = 3_465;
 
 
-    public static final int LIFT_TICKS_TWO = 171; // gobilda 890;
-    public static final int LIFT_TICKS_THREE = 324; // gobilda 7_030;
-    public static final int LIFT_TICKS_FOUR =  490; // gobilda 11_200;
-    public static final int LIFT_TICKS_FIVE = 643; // gobilda 15_800;
+    public static final int LIFT_TICKS_TWO = 142; // gobilda 890;
+    public static final int LIFT_TICKS_THREE = 221; // gobilda 7_030;
+    public static final int LIFT_TICKS_FOUR =  377; // gobilda 11_200;
+    public static final int LIFT_TICKS_FIVE = 549; // gobilda 15_800;
 
     // How many encoder ticks to move forward/backwards 1 cm
     public static final double TICKS_PER_CM = 1000.0/58.0;

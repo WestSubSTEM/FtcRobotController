@@ -180,12 +180,12 @@ public class TeleMeetQual extends OpMode {
                 liftMotor.setPower(1);
             } else if (buttonA.onPress() && !gamepad2.start) {
                 targetFromButton = true;
-                liftMotorTarget = buttonLeftStick.isPressed() ? StemperFiConstants.LIFT_TICKS_FOUR : StemperFiConstants.LIFT_TICKS_PLATE;
+                liftMotorTarget = buttonLeftStick.isPressed() ? StemperFiConstants.LIFT_TICKS_FIVE : StemperFiConstants.LIFT_TICKS_PLATE;
                 liftMotor.setTargetPosition(liftMotorTarget);
                 liftMotor.setPower(1);
             } else if (buttonB.onPress() && !gamepad2.start) {
                 targetFromButton = true;
-                liftMotorTarget = buttonLeftStick.isPressed() ? StemperFiConstants.LIFT_TICKS_FIVE : StemperFiConstants.LIFT_TICKS_HIGH;
+                liftMotorTarget = buttonLeftStick.isPressed() ? StemperFiConstants.LIFT_TICKS_FOUR : StemperFiConstants.LIFT_TICKS_HIGH;
                 liftMotor.setTargetPosition(liftMotorTarget);
                 liftMotor.setPower(1);
             }
