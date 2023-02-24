@@ -6,6 +6,8 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.Servo;
 
+import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
+
 import edu.spa.ftclib.internal.drivetrain.MecanumDrivetrain;
 import edu.spa.ftclib.internal.state.Button;
 
@@ -79,6 +81,7 @@ public class TeleLift extends TeleMeetQual {
                 liftMotorTarget = liftMotorTarget + Math.round(right_stick_y * 10.0f);
                 liftMotor.setTargetPosition(liftMotorTarget);
                 liftMotor.setPower(1.0);
+                liftMotor.getCurrent(CurrentUnit.AMPS);
             }
 
             if (liftMotorTarget < StemperFiConstants.LIFT_TICKS_LOW) {

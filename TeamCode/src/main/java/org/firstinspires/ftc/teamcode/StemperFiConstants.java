@@ -19,8 +19,9 @@ public class StemperFiConstants {
     public static final double GRABBER_SERVO_CLOSED = 0.62; //1.0;
     public static final double GRABBER_SERVO_OPEN = 0.40;
 
-    public static final double ANGLE_SERVO_FLAT = 0.53;
+    public static final double ANGLE_SERVO_FLAT = 0.56;
     public static final double ANGLE_SERVO_SCORE_DELTA = 0.12;
+    public static final double ANGLE_SERVO_SCORE_DELTA_REVERSE = 0.12;
 
     public static final int LIFT_TICKS_PLATE = 210; // gobilda 890;
     public static final int LIFT_TICKS_LOW = 1_106; // gobilda 7_030;

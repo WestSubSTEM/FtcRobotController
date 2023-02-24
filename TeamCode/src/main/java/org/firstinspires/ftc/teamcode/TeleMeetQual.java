@@ -9,7 +9,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 import edu.spa.ftclib.internal.drivetrain.MecanumDrivetrain;
 import edu.spa.ftclib.internal.state.Button;
 
-@TeleOp(name = "Qual", group = "Qual")
+@TeleOp(name = "State", group = "Qual")
 public class TeleMeetQual extends OpMode {
     // LED Lights
     public QwiicLEDStrip ledFront;
@@ -27,7 +27,7 @@ public class TeleMeetQual extends OpMode {
 
     public DcMotorEx liftMotor;
     public int liftMotorTarget = 0;
-    public Servo grabberServo, rotateServo, angleServo;
+    public Servo grabberServo, rotateServo, angleServo, cameraServo;
     public double grabberServoPosition = StemperFiConstants.GRABBER_SERVO_CLOSED;
     public double angleServoPosition = StemperFiConstants.ANGLE_SERVO_FLAT;
     public double rotateServoPosition = StemperFiConstants.ROTATE_SERVO_FRONT;
@@ -80,6 +80,9 @@ public class TeleMeetQual extends OpMode {
         liftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         liftMotor.setTargetPosition(liftMotorTarget);
         liftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+        cameraServo = hardwareMap.get(Servo.class, "camera");
+        cameraServo.setPosition(0.15);
 
         grabberServo = hardwareMap.get(Servo.class, "pinchy");
         grabberServo.setPosition(grabberServoPosition);
@@ -218,7 +221,7 @@ public class TeleMeetQual extends OpMode {
             if (rotateServoPosition == StemperFiConstants.ROTATE_SERVO_FRONT) {
                 angleServo.setPosition(StemperFiConstants.ANGLE_SERVO_FLAT + StemperFiConstants.ANGLE_SERVO_SCORE_DELTA);
             } else {
-                angleServo.setPosition(StemperFiConstants.ANGLE_SERVO_FLAT - StemperFiConstants.ANGLE_SERVO_SCORE_DELTA);
+                angleServo.setPosition(StemperFiConstants.ANGLE_SERVO_FLAT - StemperFiConstants.ANGLE_SERVO_SCORE_DELTA_REVERSE);
             }
         }
 
