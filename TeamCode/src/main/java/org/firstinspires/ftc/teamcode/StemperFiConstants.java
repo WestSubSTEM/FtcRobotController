@@ -19,7 +19,7 @@ public class StemperFiConstants {
     public static final double GRABBER_SERVO_CLOSED = 0.62; //1.0;
     public static final double GRABBER_SERVO_OPEN = 0.40;
 
-    public static final double ANGLE_SERVO_FLAT = 0.56;
+    public static final double ANGLE_SERVO_FLAT = 0.53;
     public static final double ANGLE_SERVO_SCORE_DELTA = 0.12;
     public static final double ANGLE_SERVO_SCORE_DELTA_REVERSE = 0.12;
 
@@ -29,6 +29,13 @@ public class StemperFiConstants {
     public static final int LIFT_TICKS_HIGH = 3_365; // gobilda 15_800;
     public static final int LIFT_TICKS_MAX = 3_465;
 
+    public static final int LIFT_TICKS_PLATE_FLAT = LIFT_TICKS_PLATE;
+    public static final int LIFT_TICKS_LOW_FLAT = 1718;
+    public static final int LIFT_TICKS_MED_FLAT = 2960;
+    public static final int LIFT_TICKS_HIGH_FLAT = 4060;
+
+    public static final double DRAWBRIDGE_DOWN = 0.0;
+    public static final double DRAWBRIDGE_UP = 1.0;
 
     public static final int LIFT_TICKS_TWO = 142; // gobilda 890;
     public static final int LIFT_TICKS_THREE = 221; // gobilda 7_030;

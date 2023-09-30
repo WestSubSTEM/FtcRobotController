@@ -9,104 +9,16 @@ import com.qualcomm.robotcore.hardware.Servo;
 import edu.spa.ftclib.internal.drivetrain.MecanumDrivetrain;
 import edu.spa.ftclib.internal.state.Button;
 
-@TeleOp(name = "State", group = "State")
-public class TeleMeetQual extends OpMode {
-    // LED Lights
-    public QwiicLEDStrip ledFront;
-    //public QwiicLEDStrip ledBack;
+@TeleOp(name = "DPad", group = "State")
+public class TeleMeetQualDpad extends TeleMeetQual {
 
-    // Drivetrain Motors
-    public DcMotor frontLeft;
-    public DcMotor frontRight;
-    public DcMotor backLeft;
-    public DcMotor backRight;
-    public DcMotor[] driveMotors;
-    public boolean isForward = true;
-    public boolean bothDriverTriggersReleased = true;
-  //  public DigitalChannel magnetSwitch;
-
-    public DcMotorEx liftMotor;
-    public int liftMotorTarget = 0;
-    public Servo grabberServo, rotateServo, angleServo, cameraServo;
-    public double grabberServoPosition = StemperFiConstants.GRABBER_SERVO_CLOSED;
-    public double angleServoPosition = StemperFiConstants.ANGLE_SERVO_FLAT;
-    public double rotateServoPosition = StemperFiConstants.ROTATE_SERVO_FRONT;
-    public double rotateServoTarget = rotateServoPosition;
-    public boolean targetFromButton = false;
-
-
-    public Button buttonA = new Button();
-    public Button buttonB = new Button();
-    public Button buttonX = new Button();
-    public Button buttonY = new Button();
-    public Button buttonLeftStick = new Button();
-    public Button buttonMagnet = new Button();
-    public Button dpad = new Button();
-
-    public Button bumperLeft = new Button();
-    public Button bumperRight = new Button();
-
-    public Button buttonZero = new Button();
-    public Button dpadUp = new Button();
-    public Button dpadDown = new Button();
-    public Button buttonTurntableBlue = new Button();
-    public Button buttonTurntableRed = new Button();
-
-    // The MecanumDrivetrain courteous of HOMAR FTC library
-    public MecanumDrivetrain drivetrain;
-
-    public int HIGH = 0;
-    public int MED = 0;
-    public int LOW = 0;
-    public int PLATE = 0;
+    public boolean isFlat = true;
+    public Button flatButton = new Button();
+    public Button angleButton = new Button();
 
     @Override
     public void init() {
-        HIGH = StemperFiConstants.LIFT_TICKS_HIGH;
-        MED = StemperFiConstants.LIFT_TICKS_MED;
-        LOW = StemperFiConstants.LIFT_TICKS_LOW;
-        PLATE = StemperFiConstants.LIFT_TICKS_PLATE;
-
-        // Set up LED Strips
-        // Mr. Handy Got FAT
-        ledFront = hardwareMap.get(QwiicLEDStrip.class, "led_strip_front");
-        ledFront.setBrightness(2);
-        ledFront.setColors(StemperFiConstants.DIRECTION_ACTIVE);
-//        ledBack = hardwareMap.get(QwiicLEDStrip.class, "led_strip_back");
-  //      ledBack.setBrightness(4);
-    //    ledBack.setColors(StemperFiConstants.DIRECTION_INACTIVE);
-
-
-        // Setup the drivetrain
-        frontLeft = hardwareMap.get(DcMotor.class, "driveFrontLeft");
-        frontRight = hardwareMap.get(DcMotor.class, "driveFrontRight");
-        backLeft = hardwareMap.get(DcMotor.class, "driveBackLeft");
-        backRight = hardwareMap.get(DcMotor.class, "driveBackRight");
-
-        driveMotors = new DcMotor[]{frontLeft, frontRight, backLeft, backRight};
-        drivetrain = new MecanumDrivetrain(driveMotors);
-
-        liftMotor = hardwareMap.get(DcMotorEx.class, "lift");
-        liftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        liftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        liftMotor.setTargetPosition(liftMotorTarget);
-        liftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-
-        cameraServo = hardwareMap.get(Servo.class, "camera");
-        cameraServo.setPosition(0.15);
-
-        grabberServo = hardwareMap.get(Servo.class, "pinchy");
-        grabberServo.setPosition(grabberServoPosition);
-
-        rotateServo = hardwareMap.get(Servo.class, "rotate");
-        rotateServo.setPosition(rotateServoPosition);
-
-        angleServo = hardwareMap.get(Servo.class, "angle");
-        angleServo.setPosition(angleServoPosition);
-    }
-
-    public boolean isRotating() {
-        return rotateServoTarget != rotateServoPosition;
+        super.init();
     }
 
     @Override
@@ -156,7 +68,9 @@ public class TeleMeetQual extends OpMode {
         buttonX.input(gamepad2.x);
         buttonY.input(gamepad2.y);
         buttonLeftStick.input(gamepad2.left_stick_button);
-        dpad.input(gamepad2.dpad_down || gamepad2.dpad_up || gamepad2.dpad_left || gamepad2.dpad_right);
+        dpad.input(gamepad2.dpad_left || gamepad2.dpad_right);
+        angleButton.input(gamepad2.dpad_up);
+        flatButton.input(gamepad2.dpad_down);
         bumperLeft.input(gamepad2.left_bumper);
         bumperRight.input(gamepad2.right_bumper);
         int liftMotorCurrentPosition =  liftMotor.getCurrentPosition();
@@ -170,6 +84,8 @@ public class TeleMeetQual extends OpMode {
         }
         if (isRotating()) {
             angleServo.setPosition(StemperFiConstants.ANGLE_SERVO_FLAT);
+            isFlat = true;
+            angleServoPosition = StemperFiConstants.ANGLE_SERVO_FLAT;
             double rotateServoDiff = rotateServoTarget - rotateServoPosition;
             if (Math.abs(rotateServoDiff) > StemperFiConstants.ROTATE_SERVO_STEP_SIZE) {
                 rotateServoPosition += rotateServoDiff >= 0 ? StemperFiConstants.ROTATE_SERVO_STEP_SIZE : -StemperFiConstants.ROTATE_SERVO_STEP_SIZE;
@@ -223,18 +139,20 @@ public class TeleMeetQual extends OpMode {
             }
 
             if (liftMotorTarget < StemperFiConstants.LIFT_TICKS_LOW) {
+                isFlat = true;
                 angleServoPosition = StemperFiConstants.ANGLE_SERVO_FLAT;
-                angleServo.setPosition(angleServoPosition);
+                //angleServo.setPosition(angleServoPosition);
             }
         }
+
         // angle
-        if (!isRotating() && liftMotorCurrentPosition >= StemperFiConstants.ROTATE_SERVO_LIFT_THRESHOLD && liftMotorTarget > StemperFiConstants.ROTATE_SERVO_LIFT_THRESHOLD) {
-            if (rotateServoPosition == StemperFiConstants.ROTATE_SERVO_FRONT) {
-                angleServo.setPosition(StemperFiConstants.ANGLE_SERVO_FLAT + StemperFiConstants.ANGLE_SERVO_SCORE_DELTA);
-            } else {
-                angleServo.setPosition(StemperFiConstants.ANGLE_SERVO_FLAT - StemperFiConstants.ANGLE_SERVO_SCORE_DELTA_REVERSE);
-            }
-        }
+//        if (!isRotating() && liftMotorCurrentPosition >= StemperFiConstants.ROTATE_SERVO_LIFT_THRESHOLD && liftMotorTarget > StemperFiConstants.ROTATE_SERVO_LIFT_THRESHOLD) {
+//            if (rotateServoPosition == StemperFiConstants.ROTATE_SERVO_FRONT) {
+//                angleServo.setPosition(StemperFiConstants.ANGLE_SERVO_FLAT + StemperFiConstants.ANGLE_SERVO_SCORE_DELTA);
+//            } else {
+//                angleServo.setPosition(StemperFiConstants.ANGLE_SERVO_FLAT - StemperFiConstants.ANGLE_SERVO_SCORE_DELTA_REVERSE);
+//            }
+//        }
 
         // Servo Grabber
         if (bumperRight.onPress()) {
@@ -245,7 +163,16 @@ public class TeleMeetQual extends OpMode {
             grabberServo.setPosition(grabberServoPosition);
         }
 
-
+        if (angleButton.onPress()) {
+            if (rotateServoPosition == StemperFiConstants.ROTATE_SERVO_FRONT) {
+                angleServoPosition = StemperFiConstants.ANGLE_SERVO_FLAT + StemperFiConstants.ANGLE_SERVO_SCORE_DELTA;
+            } else {
+                angleServoPosition = StemperFiConstants.ANGLE_SERVO_FLAT - StemperFiConstants.ANGLE_SERVO_SCORE_DELTA_REVERSE;
+            }
+        } else if (flatButton.onPress()) {
+            angleServoPosition = StemperFiConstants.ANGLE_SERVO_FLAT;
+        }
+        angleServo.setPosition(angleServoPosition);
 
         telemetry.addData("lift Target: ", liftMotorTarget);
         telemetry.addData("lift CurPos:", liftMotor.getCurrentPosition());
