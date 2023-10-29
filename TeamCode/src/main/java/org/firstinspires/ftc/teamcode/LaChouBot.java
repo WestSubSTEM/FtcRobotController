@@ -33,15 +33,12 @@ import com.arcrobotics.ftclib.command.button.GamepadButton;
 import com.arcrobotics.ftclib.drivebase.MecanumDrive;
 import com.arcrobotics.ftclib.gamepad.GamepadEx;
 import com.arcrobotics.ftclib.gamepad.GamepadKeys;
-import com.arcrobotics.ftclib.hardware.RevIMU;
+import com.arcrobotics.ftclib.hardware.motors.Motor;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.util.ElapsedTime;
-import com.qualcomm.robotcore.util.Range;
-import com.arcrobotics.ftclib.hardware.motors.*;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 
@@ -59,8 +56,8 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
  * Remove or comment out the @Disabled line to add this OpMode to the Driver Station OpMode list
  */
 
-@TeleOp(name="Test Drive Train", group="FTC Lib")
-public class FtcLibTest extends OpMode
+@TeleOp(name="LaChouBot", group="FTC Lib")
+public class LaChouBot extends OpMode
 {
     // Declare OpMode members.
     private ElapsedTime runtime = new ElapsedTime();
@@ -91,10 +88,10 @@ public class FtcLibTest extends OpMode
                 driverOp, GamepadKeys.Button.LEFT_BUMPER);
         rightBumper = new GamepadButton(driverOp, GamepadKeys.Button.RIGHT_BUMPER);
 
-        Motor frontLeft = new Motor(hardwareMap, "driveFrontLeft", Motor.GoBILDA.RPM_312);
-        Motor frontRight = new Motor(hardwareMap, "driveFrontRight", Motor.GoBILDA.RPM_312);
-        Motor backLeft = new Motor(hardwareMap, "driveBackLeft", Motor.GoBILDA.RPM_312);
-        Motor backRight = new Motor(hardwareMap, "driveBackRight", Motor.GoBILDA.RPM_312);
+        Motor frontLeft = new Motor(hardwareMap, "frontleft", Motor.GoBILDA.RPM_312);
+        Motor frontRight = new Motor(hardwareMap, "frontright", Motor.GoBILDA.RPM_312);
+        Motor backLeft = new Motor(hardwareMap, "backleft", Motor.GoBILDA.RPM_312);
+        Motor backRight = new Motor(hardwareMap, "backright", Motor.GoBILDA.RPM_312);
 
        // mecanum = new MecanumDrive(frontLeft, frontRight, backLeft, backRight);
         mecanum = new MecanumDrive(backRight, backLeft , frontRight, frontLeft);
