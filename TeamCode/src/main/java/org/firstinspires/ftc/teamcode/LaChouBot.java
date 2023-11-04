@@ -33,6 +33,7 @@ import com.arcrobotics.ftclib.command.button.GamepadButton;
 import com.arcrobotics.ftclib.drivebase.MecanumDrive;
 import com.arcrobotics.ftclib.gamepad.GamepadEx;
 import com.arcrobotics.ftclib.gamepad.GamepadKeys;
+import com.arcrobotics.ftclib.hardware.RevIMU;
 import com.arcrobotics.ftclib.hardware.motors.Motor;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
@@ -65,21 +66,25 @@ public class LaChouBot extends OpMode
     MecanumDrive mecanum;
     GamepadEx driverOp;
     GamepadButton leftBumper, rightBumper;
-    IMU imu;
+    RevIMU imu;
     /*
      * Code to run ONCE when the driver hits INIT
      */
     @Override
     public void init() {
-        imu = hardwareMap.get(IMU.class, "imu");
+        imu = new RevIMU(hardwareMap);
+        imu.init();
+
         RevHubOrientationOnRobot.LogoFacingDirection logoDirection = RevHubOrientationOnRobot.LogoFacingDirection.UP;
         RevHubOrientationOnRobot.UsbFacingDirection  usbDirection  = RevHubOrientationOnRobot.UsbFacingDirection.FORWARD;
 
         RevHubOrientationOnRobot orientationOnRobot = new RevHubOrientationOnRobot(logoDirection, usbDirection);
 
+
         // Now initialize the IMU with this mounting orientation
         // Note: if you choose two conflicting directions, this initialization will cause a code exception.
-        imu.initialize(new IMU.Parameters(orientationOnRobot));
+        //imu.initialize(new IMU.Parameters(orientationOnRobot));
+
 
         // the extended gamepad object
         driverOp = new GamepadEx(gamepad1);
@@ -121,7 +126,7 @@ public class LaChouBot extends OpMode
         double lx = driverOp.getLeftX();
         double ly = driverOp.getLeftY();
         double rx = driverOp.getRightX();
-        double degrees = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES);
+        double degrees = imu.getRotation2d().getDegrees();
 
         if (!leftBumper.get() && !rightBumper.get()) {
             telemetry.addLine("Robot Centric");
