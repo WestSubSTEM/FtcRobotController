@@ -44,6 +44,8 @@ import com.qualcomm.robotcore.util.Range;
 import com.arcrobotics.ftclib.hardware.motors.*;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.AngularVelocity;
+import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 
 /*
  * This file contains an example of an iterative (Non-Linear) "OpMode".
@@ -74,10 +76,31 @@ public class FtcLibTest extends OpMode
      */
     @Override
     public void init() {
+        // Retrieve and initialize the IMU.
+        // This sample expects the IMU to be in a REV Hub and named "imu".
         imu = hardwareMap.get(IMU.class, "imu");
+
+        /* Define how the hub is mounted on the robot to get the correct Yaw, Pitch and Roll values.
+         *
+         * Two input parameters are required to fully specify the Orientation.
+         * The first parameter specifies the direction the printed logo on the Hub is pointing.
+         * The second parameter specifies the direction the USB connector on the Hub is pointing.
+         * All directions are relative to the robot, and left/right is as-viewed from behind the robot.
+         */
+
+        /* The next two lines define Hub orientation.
+         * The Default Orientation (shown) is when a hub is mounted horizontally with the printed logo pointing UP and the USB port pointing FORWARD.
+         *
+         * To Do:  EDIT these two lines to match YOUR mounting configuration.
+         */
+        /*
+        Original flat up
         RevHubOrientationOnRobot.LogoFacingDirection logoDirection = RevHubOrientationOnRobot.LogoFacingDirection.UP;
         RevHubOrientationOnRobot.UsbFacingDirection  usbDirection  = RevHubOrientationOnRobot.UsbFacingDirection.FORWARD;
+         */
 
+        RevHubOrientationOnRobot.LogoFacingDirection logoDirection = RevHubOrientationOnRobot.LogoFacingDirection.LEFT;
+        RevHubOrientationOnRobot.UsbFacingDirection  usbDirection  = RevHubOrientationOnRobot.UsbFacingDirection.UP;
         RevHubOrientationOnRobot orientationOnRobot = new RevHubOrientationOnRobot(logoDirection, usbDirection);
 
         // Now initialize the IMU with this mounting orientation
@@ -91,13 +114,16 @@ public class FtcLibTest extends OpMode
                 driverOp, GamepadKeys.Button.LEFT_BUMPER);
         rightBumper = new GamepadButton(driverOp, GamepadKeys.Button.RIGHT_BUMPER);
 
-        Motor frontLeft = new Motor(hardwareMap, "driveFrontLeft", Motor.GoBILDA.RPM_312);
-        Motor frontRight = new Motor(hardwareMap, "driveFrontRight", Motor.GoBILDA.RPM_312);
-        Motor backLeft = new Motor(hardwareMap, "driveBackLeft", Motor.GoBILDA.RPM_312);
-        Motor backRight = new Motor(hardwareMap, "driveBackRight", Motor.GoBILDA.RPM_312);
-
-       // mecanum = new MecanumDrive(frontLeft, frontRight, backLeft, backRight);
-        mecanum = new MecanumDrive(backRight, backLeft , frontRight, frontLeft);
+        Motor in_e = new Motor(hardwareMap, "drive_in_e", Motor.GoBILDA.RPM_312);
+        Motor in_c = new Motor(hardwareMap, "drive_in_c", Motor.GoBILDA.RPM_312);
+        Motor up_e = new Motor(hardwareMap, "drive_up_e", Motor.GoBILDA.RPM_312);
+        Motor up_c = new Motor(hardwareMap, "drive_up_c", Motor.GoBILDA.RPM_312);
+        //MecanumDrive(Motor frontLeft, Motor frontRight, Motor backLeft, Motor backRight)
+        //mecanum = new MecanumDrive(frontLeft, frontRight, backLeft, backRight);
+        //mecanum = new MecanumDrive(up_c, up_e, in_c, in_e); // fb good, lr reverse, right counter clockwise
+        mecanum = new MecanumDrive(in_c, in_e, up_c, up_e); // left correct, turn reverse? right counter clockwise
+        //mecanum = new MecanumDrive(up_e, up_c, in_e, in_c); // fb rev, lr rev, right counter clockwise
+        //mecanum = new MecanumDrive(in_e, in_c, up_e, up_c); // fb rev, lr cor, right counter clockwise
     }
 
     /*
@@ -125,6 +151,10 @@ public class FtcLibTest extends OpMode
         double ly = driverOp.getLeftY();
         double rx = driverOp.getRightX();
         double degrees = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES);
+        // Retrieve Rotational Angles and Velocities
+        YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();
+
+        telemetry.addData("Yaw (Z)", "%.2f Deg. (Heading)", orientation.getYaw(AngleUnit.DEGREES));
 
         if (!leftBumper.get() && !rightBumper.get()) {
             telemetry.addLine("Robot Centric");
