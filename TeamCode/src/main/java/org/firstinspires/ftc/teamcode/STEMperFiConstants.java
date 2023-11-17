@@ -8,9 +8,9 @@ public class STEMperFiConstants {
         TRANSFER_PINCH,
         TRANSFER_FLIP,
         PLACE_PIXEL,
-        HANG
+        INTAKE_PREP
     };
-
+    
     public static final double PLATE_INTAKE = 0.15;
     public static final double PLATE_FLAT = 0.21;
     public static final double PLATE_PINCH = 0.37;
@@ -30,8 +30,8 @@ public class STEMperFiConstants {
     public static final double PINCH_ROTATE_LEFT = 0.55;
     public static final double PINCH_ROTATE_RIGHT = 0.3 ;
 
-    public static final int LIFT_TARGET_HANG = 0;
-    public static final int LIFT_TARGET_TRANSFER = 0;
+    public static final int LIFT_TARGET_HANG = 2000;
+    public static final int LIFT_TARGET_PINCH = 400;
     public static final int LIFT_TARGET_INTAKE = 0;
     public static final int LIFT_TARGET_FLIP = 450;
 
