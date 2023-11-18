@@ -70,7 +70,7 @@ public class Meet1Tele extends OpMode {
     // input motors exactly as shown below
     MecanumDrive mecanumDrive;
     GamepadEx driverOp, liftOp;
-    double driverTriggerLeft, driverTriggerRight, liftTriggerLeft, liftTriggerRight;
+    double liftTriggerLeft, liftTriggerRight;
 
 
     DcMotorEx motorIntake, motorLift;
@@ -83,7 +83,7 @@ public class Meet1Tele extends OpMode {
     ButtonReader buttonLiftTop, buttonLiftLeft, buttonLiftRight, buttonLiftDown;
 
     Servo servoPlate, servoArm, servoPixelRotate, servoPixelFlip, servoPixelLeft, servoPixelRight;
-    double pixelRotatePosition = STEMperFiConstants.PINCH_ROTATE_TRANSFER;
+    double pixelRotatePosition = STEMperFiConstants.PINCH_ROTATE_HORIZONTAL;
     double pixelFlipPosition = STEMperFiConstants.PINCH_FLIP_INTAKE;
 
     STEMperFiConstants.STATE state = STEMperFiConstants.STATE.INTAKE;
@@ -195,10 +195,10 @@ public class Meet1Tele extends OpMode {
      */
     @Override
     public void loop() {
+        telemetry.addData("State", state.name());
         buttonStatePrevious.readValue();
         buttonStateNext.readValue();
-        driverTriggerLeft = driverOp.getTrigger(GamepadKeys.Trigger.LEFT_TRIGGER);
-        driverTriggerRight = driverOp.getTrigger(GamepadKeys.Trigger.RIGHT_TRIGGER);
+
         liftTriggerLeft = liftOp.getTrigger(GamepadKeys.Trigger.LEFT_TRIGGER);
         liftTriggerRight = liftOp.getTrigger(GamepadKeys.Trigger.RIGHT_TRIGGER);
 
@@ -208,11 +208,12 @@ public class Meet1Tele extends OpMode {
         double rx = driverOp.getRightX();
         double degrees = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES);
 
-        if (driverTriggerLeft > 0.1 || driverTriggerRight > 0.1) {
-            degrees = 0;
-        }
 
-        mecanumDrive.driveFieldCentric( lx, ly, rx, degrees,true);
+        if (driverOp.getTrigger(GamepadKeys.Trigger.LEFT_TRIGGER) > 0.4 && driverOp.getTrigger(GamepadKeys.Trigger.RIGHT_TRIGGER) > .4) {
+            mecanumDrive.driveRobotCentric( -lx, -ly, -rx,true);
+        } else {
+            mecanumDrive.driveRobotCentric(lx, ly, rx, true);
+        }
         telemetry.addData("degrees", "%.2f Deg. (Heading)", degrees);
 
         // read controls
@@ -233,6 +234,9 @@ public class Meet1Tele extends OpMode {
             case PLACE_PIXEL:
                 placePixel();
                 break;
+            case HANG:
+                hang();
+                break;
             case INTAKE_PREP:
                 prepIntake();
                 break;
@@ -252,23 +256,28 @@ public class Meet1Tele extends OpMode {
         if (buttonStateNext.wasJustPressed()) {
             state = STEMperFiConstants.STATE.TRANSFER_START;
             stateRuntime.reset();
+            motorLift.setTargetPosition(STEMperFiConstants.LIFT_TARGET_FLIP);
         }
         if (liftTriggerRight > 0.1) {
             // spin intake in
-            motorIntake.setPower(STEMperFiConstants.INTAKE_SPEED);
+            motorIntake.setPower(STEMperFiConstants.INTAKE_SPEED * liftTriggerRight);
             armPosition = STEMperFiConstants.PLATE_ARM_INTAKE;
             platePosition = STEMperFiConstants.PLATE_INTAKE;
         } else if (liftTriggerLeft > 0.1) {
             // eject pixels
-            motorIntake.setPower(-driverTriggerLeft);
-            telemetry.addData("Intake", -driverTriggerLeft);
+            motorIntake.setPower(-liftTriggerLeft);
+            telemetry.addData("Intake", -liftTriggerLeft);
             platePosition = STEMperFiConstants.PLATE_INTAKE;
             armPosition = STEMperFiConstants.PLATE_ARM_INTAKE;
         } else {
             // keep plate flat so pixels don't slide down
             motorIntake.setPower(0);
             platePosition = STEMperFiConstants.PLATE_FLAT;
-            armPosition = STEMperFiConstants.PLATE_ARM_PINCH;
+            if (liftOp.getButton(GamepadKeys.Button.RIGHT_BUMPER)){
+                armPosition = STEMperFiConstants.PLATE_ARM_INTAKE;
+            }else {
+                armPosition = STEMperFiConstants.PLATE_ARM_PINCH;
+            }
         }
     }
 
@@ -285,10 +294,12 @@ public class Meet1Tele extends OpMode {
         servoPixelLeft.setPosition(STEMperFiConstants.PINCH_OPEN);
         servoPixelRight.setPosition(STEMperFiConstants.PINCH_OPEN);
         // have to setTargetPosition here if using isBusy
-        motorLift.setTargetPosition(STEMperFiConstants.LIFT_TARGET_FLIP);
+        //motorLift.setTargetPosition(STEMperFiConstants.LIFT_TARGET_FLIP);
         if (!motorLift.isBusy()) {
+            pixelRotatePosition = STEMperFiConstants.PINCH_ROTATE_TRANSFER;
             pixelFlipPosition = STEMperFiConstants.PINCH_FLIP_TRANSFER;
             platePosition = STEMperFiConstants.PLATE_PINCH;
+            manualLift();
         }
     }
 
@@ -306,6 +317,7 @@ public class Meet1Tele extends OpMode {
         if (!motorLift.isBusy()) {
             servoPixelRight.setPosition(STEMperFiConstants.PINCH_CLOSED);
             servoPixelLeft.setPosition(STEMperFiConstants.PINCH_CLOSED);
+            armPosition = STEMperFiConstants.PLATE_ARM_INTAKE;
         }
     }
 
@@ -330,14 +342,14 @@ public class Meet1Tele extends OpMode {
             stateRuntime.reset();
         }
         if (buttonStateNext.wasJustPressed()) {
-            state = STEMperFiConstants.STATE.INTAKE;
+            state = STEMperFiConstants.STATE.HANG;
             stateRuntime.reset();
         }
         buttonLiftTop.readValue();
         buttonLiftLeft.readValue();
         buttonLiftRight.readValue();
         buttonLiftDown.readValue();
-
+        platePosition = STEMperFiConstants.PLATE_FLAT;
         if (buttonLiftDown.wasJustPressed()) {
             pixelRotatePosition = STEMperFiConstants.PINCH_ROTATE_HORIZONTAL;
         } else if (buttonLiftRight.wasJustPressed()) {
@@ -347,10 +359,7 @@ public class Meet1Tele extends OpMode {
         } else if (buttonLiftTop.wasJustPressed()) {
             pixelRotatePosition = STEMperFiConstants.PINCH_ROTATE_TRANSFER;
         }
-        int targetPos = motorLift.getTargetPosition();
-        targetPos += Math.round(-liftOp.getLeftY() * 10);
-        targetPos = MathUtils.clamp(targetPos, STEMperFiConstants.LIFT_TARGET_INTAKE, STEMperFiConstants.LIFT_TARGET_HANG);
-        motorLift.setTargetPosition(targetPos);
+        manualLift();
 
         if (liftOp.getButton(GamepadKeys.Button.LEFT_BUMPER)) {
             servoPixelLeft.setPosition(STEMperFiConstants.PINCH_OPEN);
@@ -361,6 +370,23 @@ public class Meet1Tele extends OpMode {
 
     };
 
+    public void hang() {
+        if (buttonStatePrevious.wasJustPressed()) {
+            state = STEMperFiConstants.STATE.PLACE_PIXEL;
+            stateRuntime.reset();
+        }
+        if (buttonStateNext.wasJustPressed()) {
+            state = STEMperFiConstants.STATE.INTAKE_PREP;
+            stateRuntime.reset();
+        }
+        platePosition = STEMperFiConstants.PLATE_FLAT;
+        pixelRotatePosition = STEMperFiConstants.PINCH_ROTATE_TRANSFER;
+        if (stateRuntime.milliseconds() > 500) {
+            pixelFlipPosition = STEMperFiConstants.PINCH_FLIP_HANG;
+            manualLift();
+        }
+    }
+
     public void prepIntake() {
         platePosition = STEMperFiConstants.PLATE_FLAT;
         pixelRotatePosition = STEMperFiConstants.PINCH_ROTATE_TRANSFER;
@@ -370,16 +396,24 @@ public class Meet1Tele extends OpMode {
         motorLift.setTargetPosition(STEMperFiConstants.LIFT_TARGET_FLIP);
         if (!motorLift.isBusy()) {
             double stateDuration = stateRuntime.milliseconds();
-            if (stateDuration > 500) {
-                // give robot half a second to rotate to vertical
-                pixelFlipPosition = STEMperFiConstants.PINCH_FLIP_INTAKE;
-            } else if (stateDuration > 1000) {
+            if (stateDuration > 1000) {
+                pixelRotatePosition = STEMperFiConstants.PINCH_ROTATE_HORIZONTAL;
                 motorLift.setTargetPosition(STEMperFiConstants.LIFT_TARGET_INTAKE);
                 state = STEMperFiConstants.STATE.INTAKE;
                 stateRuntime.reset();
+            } else if (stateDuration > 500) {
+                // give robot half a second to rotate to vertical
+                pixelFlipPosition = STEMperFiConstants.PINCH_FLIP_INTAKE;
             }
         }
     };
+
+    void manualLift() {
+        int targetPos = motorLift.getTargetPosition();
+        targetPos += Math.round(liftOp.getLeftY() * 20);
+        targetPos = MathUtils.clamp(targetPos, STEMperFiConstants.LIFT_TARGET_INTAKE, STEMperFiConstants.LIFT_TARGET_HANG);
+        motorLift.setTargetPosition(targetPos);
+    }
 
 
     /*
