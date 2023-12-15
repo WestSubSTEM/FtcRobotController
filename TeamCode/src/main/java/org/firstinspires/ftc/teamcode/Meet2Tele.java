@@ -29,10 +29,6 @@
 
 package org.firstinspires.ftc.teamcode;
 
-import android.graphics.Color;
-
-import androidx.annotation.ColorInt;
-
 import com.arcrobotics.ftclib.drivebase.MecanumDrive;
 import com.arcrobotics.ftclib.gamepad.ButtonReader;
 import com.arcrobotics.ftclib.gamepad.GamepadEx;
@@ -40,18 +36,13 @@ import com.arcrobotics.ftclib.gamepad.GamepadKeys;
 import com.arcrobotics.ftclib.hardware.motors.Motor;
 import com.arcrobotics.ftclib.kinematics.HolonomicOdometry;
 import com.arcrobotics.ftclib.util.MathUtils;
-import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
-import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
-
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 
 /*
  * This file contains an example of an iterative (Non-Linear) "OpMode".
@@ -67,10 +58,8 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
  * Remove or comment out the @Disabled line to add this OpMode to the Driver Station OpMode list
  */
 
-@TeleOp(name="odoTele", group="Meet 2")
-@Disabled
-public class LedTele extends OpMode {
-
+@TeleOp(name="Teleop 2", group="Meet 2")
+public class Meet2Tele extends OpMode {
 
     // The lateral distance between the left and right odometers
     // is called the trackwidth. This is very important for
@@ -92,20 +81,6 @@ public class LedTele extends OpMode {
     private HolonomicOdometry odometry;
 
     private QwiicLEDStrip ledStripFront;
-    private QwiicLEDStrip ledStripBack;
-    private ElapsedTime elapsedTime = new ElapsedTime();
-    private int colorIndex = 0;
-    private @ColorInt int[] colors = new int[] {
-            Color.rgb(148, 0, 211),
-            Color.rgb(75, 0, 130),
-            Color.rgb(0, 0, 255),
-            Color.rgb(0, 255, 0),
-            Color.rgb(255, 0, 0),
-            Color.rgb(255, 255, 0),
-            Color.parseColor("purple"),
-            Color.parseColor("teal"),
-            Color.parseColor("silver"),
-            Color.rgb(0, 0, 0) };
 
     // Declare OpMode members.
     private ElapsedTime runtime = new ElapsedTime();
@@ -118,36 +93,29 @@ public class LedTele extends OpMode {
 
     DcMotorEx motorIntake, motorLift;
 
-    double platePosition = STEMperFiConstants.PLATE_FLAT;
-    double armPosition = STEMperFiConstants.PLATE_ARM_INTAKE;
     //int liftTarget = 0;
     long timer = 0;
 
     ButtonReader buttonLiftTop, buttonLiftLeft, buttonLiftRight, buttonLiftDown;
 
     Servo servoPlate, servoArm, servoPixelRotate, servoPixelFlip, servoPixelLeft, servoPixelRight;
-    double pixelRotatePosition = STEMperFiConstants.PINCH_ROTATE_HORIZONTAL;
+    double pixelRotatePosition = STEMperFiConstants.PINCH_ROTATE_VERTICAL;
     double pixelFlipPosition = STEMperFiConstants.PINCH_FLIP_INTAKE;
 
     STEMperFiConstants.STATE state = STEMperFiConstants.STATE.INTAKE;
 
     ButtonReader buttonStateNext, buttonStatePrevious;
 
-    IMU imu;
+
     /*
      * Code to run ONCE when the driver hits INIT
      */
     @Override
     public void init() {
-
         ledStripFront = hardwareMap.get(QwiicLEDStrip.class, "led");
         ledStripFront.setBrightness(2);
-        ledStripFront.setColor(Color.parseColor("purple"));
+        ledStripFront.setColor(STEMperFiConstants.COLOR_RED);
 
-        servoPlate = hardwareMap.get(Servo.class, "plate");
-        servoPlate.setPosition(platePosition);
-        servoArm = hardwareMap.get(Servo.class, "arm");
-        servoArm.setPosition(armPosition);
         servoPixelRotate = hardwareMap.get(Servo.class, "rotate");
         servoPixelRotate.setPosition(pixelRotatePosition);
         servoPixelFlip = hardwareMap.get(Servo.class, "flip");
@@ -189,15 +157,8 @@ public class LedTele extends OpMode {
         RevHubOrientationOnRobot.UsbFacingDirection  usbDirection  = RevHubOrientationOnRobot.UsbFacingDirection.FORWARD;
          */
 
-        imu = hardwareMap.get(IMU.class, "imu");
-        RevHubOrientationOnRobot.LogoFacingDirection logoDirection = RevHubOrientationOnRobot.LogoFacingDirection.LEFT;
-        RevHubOrientationOnRobot.UsbFacingDirection  usbDirection  = RevHubOrientationOnRobot.UsbFacingDirection.UP;
-        RevHubOrientationOnRobot orientationOnRobot = new RevHubOrientationOnRobot(logoDirection, usbDirection);
 
-        // Now initialize the IMU with this mounting orientation
-        // Note: if you choose two conflicting directions, this initialization will cause a code exception.
-        imu.initialize(new IMU.Parameters(orientationOnRobot));
-        imu.resetYaw();
+
 
         Motor in_e = new Motor(hardwareMap, "drive_in_e", Motor.GoBILDA.RPM_312);
         Motor in_c = new Motor(hardwareMap, "drive_in_c", Motor.GoBILDA.RPM_312);
@@ -214,12 +175,11 @@ public class LedTele extends OpMode {
         rightOdometer = in_c.encoder.setDistancePerPulse(DISTANCE_PER_PULSE);
         centerOdometer = up_c.encoder.setDistancePerPulse(DISTANCE_PER_PULSE);
 
-        //rightOdometer.setDirection(Motor.Direction.REVERSE);
-
+/*
         leftOdometer.reset();
         rightOdometer.reset();
         centerOdometer.reset();;
-
+*/
         odometry = new HolonomicOdometry(
                 leftOdometer::getDistance,
                 rightOdometer::getDistance,
@@ -228,11 +188,8 @@ public class LedTele extends OpMode {
         );
 
 
-
         motorIntake = hardwareMap.get(DcMotorEx.class, "intake");
         motorIntake.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-
-
 
         motorLift = hardwareMap.get(DcMotorEx.class, "lift_c");
         motorLift.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -241,7 +198,6 @@ public class LedTele extends OpMode {
         motorLift.setTargetPosition(STEMperFiConstants.LIFT_TARGET_INTAKE);
         motorLift.setPower(1);
         motorLift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-
 
     }
 
@@ -276,33 +232,9 @@ public class LedTele extends OpMode {
         double lx = driverOp.getLeftX();
         double ly = driverOp.getLeftY();
         double rx = driverOp.getRightX();
-        double degrees = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES);
-
-        telemetry.addData("Lift Target", motorLift.getTargetPosition());
-        telemetry.addData("Lift CurPos", motorLift.getCurrentPosition());
         odometry.updatePose();
-        telemetry.addData("odo head", odometry.getPose().getHeading());
-        telemetry.addData("odo rot deg", odometry.getPose().getRotation().getDegrees());
-        telemetry.addData("odo l", leftOdometer.getPosition());
-        telemetry.addData("odo r", rightOdometer.getPosition());
-        telemetry.addData("odo c", centerOdometer.getPosition());
+        mecanumDrive.driveFieldCentric(lx, ly, rx, odometry.getPose().getRotation().getDegrees(), gamepad1.left_bumper || gamepad1.right_bumper);
 
-        servoPlate.setPosition(platePosition);
-        servoArm.setPosition(armPosition);
-        servoPixelFlip.setPosition(pixelFlipPosition);
-        servoPixelRotate.setPosition(pixelRotatePosition);
-
-
-        mecanumDrive.driveFieldCentric(lx, ly, rx, odometry.getPose().getRotation().getDegrees(), false);
-        /*
-        if (driverOp.getTrigger(GamepadKeys.Trigger.LEFT_TRIGGER) > 0.4 && driverOp.getTrigger(GamepadKeys.Trigger.RIGHT_TRIGGER) > .4) {
-            mecanumDrive.driveRobotCentric( -lx, -ly, -rx,true);
-        } else {
-            mecanumDrive.driveRobotCentric(lx, ly, rx, true);
-        }
-
-         */
-        telemetry.addData("degrees", "%.2f Deg. (Heading)", degrees);
 
         // read controls
 
@@ -328,121 +260,84 @@ public class LedTele extends OpMode {
             case INTAKE_PREP:
                 prepIntake();
                 break;
+            case DRIVE_TO_HUMAN:
+                driveToHuman();
+            break;
         }
 
+        telemetry.addData("Lift Target", motorLift.getTargetPosition());
+        telemetry.addData("Lift CurPos", motorLift.getCurrentPosition());
 
-
-        if (elapsedTime.milliseconds() >= 500) {
-            if (colorIndex == colors.length) {
-                ledStripFront.setColors(colors);
-                colorIndex = 0;
-            } else {
-                ledStripFront.setColor(colors[colorIndex]);
-                colorIndex++;
-            }
-            elapsedTime.reset();
-        }
+        servoPixelFlip.setPosition(pixelFlipPosition);
+        servoPixelRotate.setPosition(pixelRotatePosition);
     }
 
 
     public void intake() {
         if (buttonStateNext.wasJustPressed()) {
             state = STEMperFiConstants.STATE.TRANSFER_START;
+            ledStripFront.turnAllOff();
             stateRuntime.reset();
-            motorLift.setTargetPosition(STEMperFiConstants.LIFT_TARGET_FLIP);
+            motorLift.setTargetPosition(STEMperFiConstants.LIFT_TARGET_PINCH);
         }
-        if (liftTriggerRight > 0.1) {
+        servoPixelLeft.setPosition(STEMperFiConstants.PINCH_OPEN);
+        servoPixelRight.setPosition(STEMperFiConstants.PINCH_OPEN);
+        if (liftTriggerRight > 0.1 && !motorLift.isBusy()) {
             // spin intake in
             motorIntake.setPower(STEMperFiConstants.INTAKE_SPEED * liftTriggerRight);
-            armPosition = STEMperFiConstants.PLATE_ARM_INTAKE;
-            platePosition = STEMperFiConstants.PLATE_INTAKE;
-        } else if (liftTriggerLeft > 0.1) {
+        } else if (liftTriggerLeft > 0.1 && !motorLift.isBusy()) {
             // eject pixels
             motorIntake.setPower(-liftTriggerLeft);
-            telemetry.addData("Intake", -liftTriggerLeft);
-            platePosition = STEMperFiConstants.PLATE_INTAKE;
-            armPosition = STEMperFiConstants.PLATE_ARM_INTAKE;
         } else {
             // keep plate flat so pixels don't slide down
             motorIntake.setPower(0);
-            platePosition = STEMperFiConstants.PLATE_FLAT;
-            if (liftOp.getButton(GamepadKeys.Button.RIGHT_BUMPER)){
-                armPosition = STEMperFiConstants.PLATE_ARM_INTAKE;
-            }else {
-                armPosition = STEMperFiConstants.PLATE_ARM_PINCH;
-            }
         }
     }
 
 
     public void transferStart() {
-        if (buttonStatePrevious.wasJustPressed()) {
-            state = STEMperFiConstants.STATE.INTAKE;
-            stateRuntime.reset();
-        }
-        if (buttonStateNext.wasJustPressed()) {
-            state = STEMperFiConstants.STATE.TRANSFER_PINCH;
-            stateRuntime.reset();
-        }
-        servoPixelLeft.setPosition(STEMperFiConstants.PINCH_OPEN);
-        servoPixelRight.setPosition(STEMperFiConstants.PINCH_OPEN);
         // have to setTargetPosition here if using isBusy
         //motorLift.setTargetPosition(STEMperFiConstants.LIFT_TARGET_FLIP);
         if (!motorLift.isBusy()) {
-            pixelRotatePosition = STEMperFiConstants.PINCH_ROTATE_VERTICAL;
-            pixelFlipPosition = STEMperFiConstants.PINCH_FLIP_TRANSFER;
-            platePosition = STEMperFiConstants.PLATE_PINCH;
-            manualLift();
+            servoPixelLeft.setPosition(STEMperFiConstants.PINCH_CLOSED);
+            servoPixelRight.setPosition(STEMperFiConstants.PINCH_CLOSED);
+            state = STEMperFiConstants.STATE.TRANSFER_PINCH;
+            stateRuntime.reset();
         }
     }
 
     public void transferPinch() {
-        if (buttonStatePrevious.wasJustPressed()) {
-            state = STEMperFiConstants.STATE.TRANSFER_START;
-            stateRuntime.reset();
-        }
-        if (buttonStateNext.wasJustPressed()) {
-            state = STEMperFiConstants.STATE.TRANSFER_FLIP;
-            stateRuntime.reset();
-        }
-
-        motorLift.setTargetPosition(STEMperFiConstants.LIFT_TARGET_PINCH);
-        if (!motorLift.isBusy()) {
-            servoPixelRight.setPosition(STEMperFiConstants.PINCH_CLOSED);
-            servoPixelLeft.setPosition(STEMperFiConstants.PINCH_CLOSED);
-            armPosition = STEMperFiConstants.PLATE_ARM_INTAKE;
+        if (stateRuntime.milliseconds() > 250) {
+            motorLift.setTargetPosition(STEMperFiConstants.LIFT_TARGET_INTAKE);
+            if (!motorLift.isBusy()) {
+                pixelFlipPosition = STEMperFiConstants.PINCH_FLIP_BACKDROP;
+                state = STEMperFiConstants.STATE.TRANSFER_FLIP;
+                stateRuntime.reset();
+            }
         }
     }
 
     public void transferFlip() {
-        if (buttonStatePrevious.wasJustPressed()) {
-            state = STEMperFiConstants.STATE.TRANSFER_PINCH;
-            stateRuntime.reset();
-        }
-        if (buttonStateNext.wasJustPressed()) {
+        if (stateRuntime.milliseconds() > 500) {
+            motorLift.setTargetPosition(STEMperFiConstants.LIFT_TARGET_PINCH);
+            ledStripFront.setColor(STEMperFiConstants.COLOR_GREEN);
+            pixelRotatePosition = STEMperFiConstants.PINCH_ROTATE_HORIZONTAL;
             state = STEMperFiConstants.STATE.PLACE_PIXEL;
-            stateRuntime.reset();
         }
-        motorLift.setTargetPosition(STEMperFiConstants.LIFT_TARGET_FLIP);
-        if (!motorLift.isBusy()) {
-            pixelFlipPosition = STEMperFiConstants.PINCH_FLIP_BACKDROP;
-        }
-    };
+    }
 
     public void placePixel() {
-        if (buttonStatePrevious.wasJustPressed()) {
-            state = STEMperFiConstants.STATE.TRANSFER_FLIP;
-            stateRuntime.reset();
-        }
         if (buttonStateNext.wasJustPressed()) {
             state = STEMperFiConstants.STATE.HANG;
+            ledStripFront.setColor(STEMperFiConstants.COLOR_PURPLE);
+            pixelFlipPosition = STEMperFiConstants.PINCH_FLIP_HANG;
+            pixelRotatePosition = STEMperFiConstants.PINCH_ROTATE_HORIZONTAL;
             stateRuntime.reset();
         }
         buttonLiftTop.readValue();
         buttonLiftLeft.readValue();
         buttonLiftRight.readValue();
         buttonLiftDown.readValue();
-        platePosition = STEMperFiConstants.PLATE_FLAT;
         if (buttonLiftDown.wasJustPressed()) {
             pixelRotatePosition = STEMperFiConstants.PINCH_ROTATE_HORIZONTAL;
         } else if (buttonLiftRight.wasJustPressed()) {
@@ -464,16 +359,12 @@ public class LedTele extends OpMode {
     };
 
     public void hang() {
-        if (buttonStatePrevious.wasJustPressed()) {
-            state = STEMperFiConstants.STATE.PLACE_PIXEL;
-            stateRuntime.reset();
-        }
         if (buttonStateNext.wasJustPressed()) {
             state = STEMperFiConstants.STATE.INTAKE_PREP;
+            ledStripFront.turnAllOff();
             stateRuntime.reset();
         }
-        platePosition = STEMperFiConstants.PLATE_FLAT;
-        pixelRotatePosition = STEMperFiConstants.PINCH_ROTATE_VERTICAL;
+        pixelRotatePosition = STEMperFiConstants.PINCH_ROTATE_HORIZONTAL;
         if (stateRuntime.milliseconds() > 500) {
             pixelFlipPosition = STEMperFiConstants.PINCH_FLIP_HANG;
             manualLift();
@@ -481,25 +372,33 @@ public class LedTele extends OpMode {
     }
 
     public void prepIntake() {
-        platePosition = STEMperFiConstants.PLATE_FLAT;
         pixelRotatePosition = STEMperFiConstants.PINCH_ROTATE_VERTICAL;
         servoPixelLeft.setPosition(STEMperFiConstants.PINCH_OPEN);
         servoPixelRight.setPosition(STEMperFiConstants.PINCH_OPEN);
         // have to setTargetPosition here if using isBusy
-        motorLift.setTargetPosition(STEMperFiConstants.LIFT_TARGET_FLIP);
+        motorLift.setTargetPosition(STEMperFiConstants.LIFT_TARGET_INTAKE);
         if (!motorLift.isBusy()) {
             double stateDuration = stateRuntime.milliseconds();
             if (stateDuration > 1000) {
-                pixelRotatePosition = STEMperFiConstants.PINCH_ROTATE_HORIZONTAL;
-                motorLift.setTargetPosition(STEMperFiConstants.LIFT_TARGET_INTAKE);
-                state = STEMperFiConstants.STATE.INTAKE;
+                motorLift.setTargetPosition(STEMperFiConstants.LIFT_TARGET_PINCH);
+                state = STEMperFiConstants.STATE.DRIVE_TO_HUMAN;
                 stateRuntime.reset();
+                ledStripFront.setColor(STEMperFiConstants.COLOR_YELLOW);
             } else if (stateDuration > 500) {
                 // give robot half a second to rotate to vertical
                 pixelFlipPosition = STEMperFiConstants.PINCH_FLIP_INTAKE;
             }
         }
     };
+
+    public void driveToHuman() {
+        if (buttonStateNext.wasJustPressed()) {
+            state = STEMperFiConstants.STATE.INTAKE;
+            ledStripFront.setColor(STEMperFiConstants.COLOR_RED);
+            motorLift.setTargetPosition(STEMperFiConstants.LIFT_TARGET_INTAKE);
+            stateRuntime.reset();
+        }
+    }
 
     void manualLift() {
         int targetPos = motorLift.getTargetPosition();

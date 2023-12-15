@@ -1,41 +1,52 @@
 package org.firstinspires.ftc.teamcode;
 
+import android.graphics.Color;
+import androidx.annotation.ColorInt;
+
 public class STEMperFiConstants {
+
+
+    public static final @ColorInt int COLOR_RED = Color.parseColor("red");
+    public static final @ColorInt int COLOR_ORANGE = Color.parseColor("orange");
+    public static final @ColorInt int COLOR_YELLOW = Color.parseColor("yellow");
+    public static final @ColorInt int COLOR_GREEN = Color.parseColor("green");
+    public static final @ColorInt int COLOR_BLUE = Color.parseColor("blue");
+    public static final @ColorInt int COLOR_PURPLE = Color.parseColor("purple");
 
     public enum STATE {
         INTAKE,
         TRANSFER_START,
         TRANSFER_PINCH,
         TRANSFER_FLIP,
+        DRIVE_TO_HUMAN,
         PLACE_PIXEL,
         HANG,
         INTAKE_PREP
     };
     
-    public static final double PLATE_INTAKE = 0.15;
-    public static final double PLATE_FLAT = 0.21;
-    public static final double PLATE_PINCH = 0.35;
-
-    public static final double PLATE_ARM_INTAKE = 0.52;
-    public static final double PLATE_ARM_PINCH = 0.46;
 
     public static final double PINCH_OPEN = 0.5;
-    public static final double PINCH_CLOSED = 0.9;
+    public static final double PINCH_CLOSED = 0.85;
 
-    public static final double PINCH_FLIP_INTAKE = 0.62;
-    public static final double PINCH_FLIP_TRANSFER = 0.38;
-    public static final double PINCH_FLIP_HANG = 0.3;
+    public static final double PINCH_FLIP_INTAKE = 0.41;
+    public static final double PINCH_FLIP_TRANSFER = 0.41;
+    public static final double PINCH_FLIP_HANG = 0.1;
 
-    public static final double PINCH_FLIP_BACKDROP = 0.0;
+    public static final double PINCH_FLIP_BACKDROP = 0.19;
 
-    public static final double PINCH_ROTATE_TRANSFER = 0.72;
+    // vertical 0.11 &  0.71
+    public static final double PINCH_ROTATE_VERTICAL = 0.71;
+
+    //  Horizontal 1.0 & .4
     public static final double PINCH_ROTATE_HORIZONTAL = 0.41;
+
+    // add sub .1 from horizontal
     public static final double PINCH_ROTATE_LEFT = 0.55;
     public static final double PINCH_ROTATE_RIGHT = 0.3 ;
 
     public static final int LIFT_TARGET_HANG = 2000;
-    public static final int LIFT_TARGET_PINCH = 260;
-    public static final int LIFT_TARGET_INTAKE = 0;
+    public static final int LIFT_TARGET_PINCH = 0;
+    public static final int LIFT_TARGET_INTAKE = 100;
     public static final int LIFT_TARGET_FLIP = 450;
 
     public static final double INTAKE_SPEED = 0.4;

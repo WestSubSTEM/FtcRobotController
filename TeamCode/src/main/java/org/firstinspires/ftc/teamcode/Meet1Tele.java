@@ -296,7 +296,7 @@ public class Meet1Tele extends OpMode {
         // have to setTargetPosition here if using isBusy
         //motorLift.setTargetPosition(STEMperFiConstants.LIFT_TARGET_FLIP);
         if (!motorLift.isBusy()) {
-            pixelRotatePosition = STEMperFiConstants.PINCH_ROTATE_TRANSFER;
+            pixelRotatePosition = STEMperFiConstants.PINCH_ROTATE_VERTICAL;
             pixelFlipPosition = STEMperFiConstants.PINCH_FLIP_TRANSFER;
             platePosition = STEMperFiConstants.PLATE_PINCH;
             manualLift();
@@ -357,7 +357,7 @@ public class Meet1Tele extends OpMode {
         } else if (buttonLiftLeft.wasJustPressed()) {
             pixelRotatePosition = STEMperFiConstants.PINCH_ROTATE_LEFT;
         } else if (buttonLiftTop.wasJustPressed()) {
-            pixelRotatePosition = STEMperFiConstants.PINCH_ROTATE_TRANSFER;
+            pixelRotatePosition = STEMperFiConstants.PINCH_ROTATE_VERTICAL;
         }
         manualLift();
 
@@ -380,7 +380,7 @@ public class Meet1Tele extends OpMode {
             stateRuntime.reset();
         }
         platePosition = STEMperFiConstants.PLATE_FLAT;
-        pixelRotatePosition = STEMperFiConstants.PINCH_ROTATE_TRANSFER;
+        pixelRotatePosition = STEMperFiConstants.PINCH_ROTATE_VERTICAL;
         if (stateRuntime.milliseconds() > 500) {
             pixelFlipPosition = STEMperFiConstants.PINCH_FLIP_HANG;
             manualLift();
@@ -389,7 +389,7 @@ public class Meet1Tele extends OpMode {
 
     public void prepIntake() {
         platePosition = STEMperFiConstants.PLATE_FLAT;
-        pixelRotatePosition = STEMperFiConstants.PINCH_ROTATE_TRANSFER;
+        pixelRotatePosition = STEMperFiConstants.PINCH_ROTATE_VERTICAL;
         servoPixelLeft.setPosition(STEMperFiConstants.PINCH_OPEN);
         servoPixelRight.setPosition(STEMperFiConstants.PINCH_OPEN);
         // have to setTargetPosition here if using isBusy
