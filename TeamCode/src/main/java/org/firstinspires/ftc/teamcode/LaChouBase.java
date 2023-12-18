@@ -36,6 +36,7 @@ import com.arcrobotics.ftclib.drivebase.MecanumDrive;
 import com.arcrobotics.ftclib.gamepad.GamepadEx;
 import com.arcrobotics.ftclib.gamepad.GamepadKeys;
 import com.arcrobotics.ftclib.hardware.motors.Motor;
+import com.arcrobotics.ftclib.hardware.motors.Motor.Direction;
 import com.arcrobotics.ftclib.hardware.motors.MotorEx;
 import com.arcrobotics.ftclib.hardware.motors.Motor.Encoder;
 import com.arcrobotics.ftclib.kinematics.HolonomicOdometry;
@@ -100,6 +101,7 @@ public class LaChouBase extends OpMode
         leftEncoder = backLeft.encoder.setDistancePerPulse(DISTANCE_PER_PULSE);
         rightEncoder = frontRight.encoder.setDistancePerPulse(DISTANCE_PER_PULSE);
         perpEncoder = frontLeft.encoder.setDistancePerPulse(DISTANCE_PER_PULSE);
+        //perpEncoder.setDirection(Direction.REVERSE);
 
         // Reset the encoders
         leftEncoder.reset();
@@ -202,7 +204,7 @@ public class LaChouBase extends OpMode
                 driverOp.getLeftX(),
                 driverOp.getLeftY(),
                 driverOp.getRightX(),
-                PositionTracker.robotPose.getHeading() * 57.2958,
+                -PositionTracker.robotPose.getHeading() * 57.2958,
                 true
         );
 /*
