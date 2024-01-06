@@ -60,11 +60,6 @@ public class LaChouBase extends OpMode
 
     private MotorEx backRight, backLeft, frontRight, frontLeft;
     private MecanumDrive mecanum;
-    private ColorSensor colorSensor;
-    private VisionPortal visionPortal;
-    private AprilTagProcessor aprilTagProcessor;
-    private TfodProcessor tfodProcessor;
-
     private Encoder leftEncoder, rightEncoder, perpEncoder;
     private HolonomicOdometry odometry;
     public static final double TRACK_WIDTH = 10.25;
@@ -72,7 +67,6 @@ public class LaChouBase extends OpMode
     public static final double WHEEL_DIAMETER = 1.89;
     public static final double TICKS_PER_REV = 2000;
     public static final double DISTANCE_PER_PULSE = Math.PI * WHEEL_DIAMETER / TICKS_PER_REV;
-
 
     private GamepadEx driverOp;
     private GamepadButton leftBumper, rightBumper, aButton, bButton, xButton, yButton;
@@ -116,46 +110,12 @@ public class LaChouBase extends OpMode
                 CENTER_WHEEL_OFFSET
         );
 
-
         // read the current position from the position tracker
         //PositionTracker.robotPose = odometry.getPose();
         odometry.updatePose(PositionTracker.robotPose);
 
         telemetry.addData("Robot Position at Init: ", PositionTracker.robotPose);
         telemetry.update();
-
-        // Color sensor
-        telemetry.addLine("Initializing color sensor");
-        telemetry.update();
-        colorSensor = hardwareMap.colorSensor.get("sensor_color");
-
-        // AprilTag processor
-        telemetry.addLine("Initializing april tag processor");
-        aprilTagProcessor = new AprilTagProcessor.Builder()
-                .setTagLibrary(AprilTagGameDatabase.getCurrentGameTagLibrary())
-                .setDrawTagID(true)
-                .setDrawTagOutline(true)
-                .setDrawAxes(true)
-                .setDrawCubeProjection(true)
-                .build();
-
-        // TensorFlow processor
-        telemetry.addLine("Initializing tensorflow processor");
-        tfodProcessor = new TfodProcessor.Builder()
-                .setMaxNumRecognitions(10)
-                .setUseObjectTracker(true)
-                .setTrackerMaxOverlap((float) 0.2)
-                .setTrackerMinSize(16)
-                .build();
-
-        // Vision Portal
-        telemetry.addLine("Initializing vision portal");
-        visionPortal = new VisionPortal.Builder()
-                .setCamera(hardwareMap.get(WebcamName.class, "Webcam 1"))
-                .setCameraResolution(new Size(640, 480))
-                .addProcessor(aprilTagProcessor)
-                .addProcessor(tfodProcessor)
-                .build();
 
         // Gamepad
         telemetry.addLine("Initializing gamepads");
@@ -194,7 +154,6 @@ public class LaChouBase extends OpMode
     @Override
     public void loop() {
         showGamepadTelemetry();
-//        showColorSensorTelemetry();
 
         odometry.updatePose();
         PositionTracker.robotPose = odometry.getPose();
@@ -242,12 +201,5 @@ public class LaChouBase extends OpMode
         telemetry.addData("Perp Encoder", perpEncoder.getDistance());
     }
 
-    private void showColorSensorTelemetry() {
-        telemetry.addLine("Color Sensor");
-        telemetry.addData("Red", colorSensor.red());
-        telemetry.addData("Green", colorSensor.green());
-        telemetry.addData("Blue", colorSensor.blue());
-        telemetry.addData("Alpha", colorSensor.alpha());
-    }
 
 }
