@@ -53,8 +53,7 @@ import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 import org.firstinspires.ftc.vision.tfod.TfodProcessor;
 
 @TeleOp(name="LaChouBase", group="FTC Lib")
-public class LaChouBase extends OpMode
-{
+public class LaChouBase extends OpMode {
 
     private ElapsedTime runtime = new ElapsedTime();
 
@@ -79,7 +78,6 @@ public class LaChouBase extends OpMode
 
         // Motors and drive
         telemetry.addLine("Initializing motors and drive");
-        telemetry.update();
 
         backRight = new MotorEx(hardwareMap, "backright", Motor.GoBILDA.RPM_312);
         backLeft = new MotorEx(hardwareMap, "backleft", Motor.GoBILDA.RPM_312);
@@ -90,7 +88,6 @@ public class LaChouBase extends OpMode
 
         // Encoders and Odometry
         telemetry.addLine("Initializing encoders and odometry");
-        telemetry.update();
 
         leftEncoder = backLeft.encoder.setDistancePerPulse(DISTANCE_PER_PULSE);
         rightEncoder = frontRight.encoder.setDistancePerPulse(DISTANCE_PER_PULSE);
@@ -115,7 +112,6 @@ public class LaChouBase extends OpMode
         odometry.updatePose(PositionTracker.robotPose);
 
         telemetry.addData("Robot Position at Init: ", PositionTracker.robotPose);
-        telemetry.update();
 
         // Gamepad
         telemetry.addLine("Initializing gamepads");
@@ -166,6 +162,7 @@ public class LaChouBase extends OpMode
                 -PositionTracker.robotPose.getHeading() * 57.2958,
                 true
         );
+
 /*
         mecanum.driveRobotCentric(
                 driverOp.getLeftX(),

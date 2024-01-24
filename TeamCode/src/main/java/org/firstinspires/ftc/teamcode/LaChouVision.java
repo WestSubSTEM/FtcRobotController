@@ -40,7 +40,8 @@ public class LaChouVision extends LaChouBase {
     private TeamPropDetectorProcessor tpdProcessor;
 
     int state;
-    int spikeMarkZone;
+    int regionGuess;
+    int colorGuess;
 
     @Override
     public void init() {
@@ -73,14 +74,12 @@ public class LaChouVision extends LaChouBase {
                 tpdProcessor);
     }
 
-    @Override
-    public void init_loop() {
-    }
 
     @Override
     public void start() {
         state = 0;
-        spikeMarkZone = 0;
+        colorGuess = 0;
+        regionGuess = 0;
     }
 
     @Override
@@ -90,17 +89,20 @@ public class LaChouVision extends LaChouBase {
 
             // Detect the location of the team prop
             case 0:
-                while (!tpdProcessor.foundPixels()) {
-                    telemetry.addLine("Looking for pixels");
-                    telemetry.update();
+                telemetry.addLine("Guessing");
+                while(!tpdProcessor.guessed()) {
+                    this.colorGuess = tpdProcessor.getColorGuess();
+                    this.regionGuess = tpdProcessor.getRegionGuess();
                 }
-                spikeMarkZone = tpdProcessor.getSpikeMarkZone();
+                //tpdProcessor.stop();
+                telemetry.addData("Color", this.colorGuess);
+                telemetry.addData("Region", this.regionGuess);
                 state = 1;
                 break;
 
             // Push pre-loaded purple pixel to the proper Spike Mark (20 points)'
             case 1:
-                moveToSpikeMark(spikeMarkZone);
+                moveToSpikeMark(this.colorGuess, this.regionGuess);
                 break;
 
             // Move to the correct backdrop
@@ -142,8 +144,8 @@ public class LaChouVision extends LaChouBase {
         telemetry.addData("Alpha", colorSensor.alpha());
     }
 
-    private void moveToSpikeMark(int spikeMarkZone) {
-        switch (spikeMarkZone) {
+    private void moveToSpikeMark(int colorGuess, int regionGuess) {
+        switch (regionGuess) {
             case 1:
                 // Move to the left
                 break;
