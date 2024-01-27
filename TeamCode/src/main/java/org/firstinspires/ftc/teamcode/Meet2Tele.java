@@ -282,6 +282,7 @@ public class Meet2Tele extends OpMode {
     @Override
     public void loop() {
         // vision portal
+        /*
         telemetry.addData("TeamPropDetector Calls", teamPropDetector.getCalls());
         telemetry.addData("TeamPropDetector No. Pixels", teamPropDetector.getNumberOfPixels());
         if (teamPropDetector.foundPixels()) {
@@ -290,6 +291,8 @@ public class Meet2Tele extends OpMode {
         } else {
             telemetry.addData("Team Prop", "not found");
         }
+
+         */
 
 
         telemetry.addData("State", state.name());
