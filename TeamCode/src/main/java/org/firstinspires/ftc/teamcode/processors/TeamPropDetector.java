@@ -28,11 +28,14 @@ public class TeamPropDetector implements VisionProcessor {
 
     boolean guessed = false;
 
+    boolean enabled = true;
+
     @Override
     public void init(int width, int height, CameraCalibration calibration) {
+
     }
 
-    public static double findLargestContour(Mat image, Scalar lowerBound, Scalar upperBound) {
+    private static double findLargestContour(Mat image, Scalar lowerBound, Scalar upperBound) {
         Mat mask = new Mat();
         Core.inRange(image, lowerBound, upperBound, mask);
 
@@ -52,7 +55,7 @@ public class TeamPropDetector implements VisionProcessor {
         return largestArea;
     }
 
-    public void guessProp(Mat image) {
+    private void guessProp(Mat image) {
         Mat hsvImage = new Mat();
         Imgproc.cvtColor(image, hsvImage, Imgproc.COLOR_BGR2HSV);
 
@@ -96,7 +99,9 @@ public class TeamPropDetector implements VisionProcessor {
 
         calls++;
 
-        guessProp(frame);
+        if (this.enabled) {
+            guessProp(frame);
+        }
 
         return frame;
     }
@@ -111,14 +116,6 @@ public class TeamPropDetector implements VisionProcessor {
 
     }
 
-    public boolean foundPixels() {
-        return pixels.size() > 0;
-    }
-
-    public int getSpikeMarkZone() {
-        return 1;
-    }
-
     public boolean guessed() {
         return this.guessed;
     }
@@ -129,5 +126,16 @@ public class TeamPropDetector implements VisionProcessor {
 
     public int getRegionGuess() {
         return this.regionGuess;
+    }
+
+    public void enable() {
+        this.enabled = true;
+    }
+    public void disable() {
+        this.enabled = false;
+    }
+
+    public int getNumberOfCalls() {
+        return this.calls;
     }
 }
