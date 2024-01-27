@@ -2,34 +2,14 @@ package org.firstinspires.ftc.teamcode;
 
 import android.util.Size;
 
-import com.arcrobotics.ftclib.drivebase.MecanumDrive;
-import com.arcrobotics.ftclib.hardware.motors.Motor;
-import com.arcrobotics.ftclib.hardware.motors.MotorEx;
-import com.arcrobotics.ftclib.kinematics.HolonomicOdometry;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
-import org.firstinspires.ftc.teamcode.processors.TeamPropDetectorProcessor;
+import org.firstinspires.ftc.teamcode.processors.TeamPropDetector;
 import org.firstinspires.ftc.vision.VisionPortal;
-import org.firstinspires.ftc.vision.VisionProcessor;
 import org.firstinspires.ftc.vision.apriltag.AprilTagGameDatabase;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
-import org.firstinspires.ftc.vision.tfod.TfodProcessor;
-import org.opencv.core.Core;
-import org.opencv.core.Mat;
-import org.opencv.core.MatOfPoint;
-import org.opencv.core.Scalar;
-import org.opencv.imgproc.Imgproc;
-import org.openftc.easyopencv.OpenCvCamera;
-import org.openftc.easyopencv.OpenCvCameraFactory;
-import org.openftc.easyopencv.OpenCvCameraRotation;
-import org.openftc.easyopencv.OpenCvPipeline;
-import org.openftc.easyopencv.OpenCvWebcam;
-
-import java.util.ArrayList;
-import java.util.List;
 
 @Autonomous(name="LaChouVision", group="Robot")
 public class LaChouVision extends LaChouBase {
@@ -37,10 +17,11 @@ public class LaChouVision extends LaChouBase {
     private ColorSensor colorSensor;
     private VisionPortal visionPortal;
     private AprilTagProcessor aprilTagProcessor;
-    private TeamPropDetectorProcessor tpdProcessor;
+    private TeamPropDetector tpdProcessor;
 
     int state;
-    int spikeMarkZone;
+    int regionGuess;
+    int colorGuess;
 
     @Override
     public void init() {
@@ -63,26 +44,25 @@ public class LaChouVision extends LaChouBase {
 
         // TeamPropDetector processor
         telemetry.addLine("Initializing TeamPropDetector processor");
-        tpdProcessor = new TeamPropDetectorProcessor();
+        tpdProcessor = new TeamPropDetector();
 
         // Vision Portal
+        // Vision Portal
         telemetry.addLine("Initializing vision portal");
-        visionPortal = VisionPortal.easyCreateWithDefaults(
-                hardwareMap.get(WebcamName.class, "Webcam 1"),
-                aprilTagProcessor,
-                tpdProcessor);
-    }
+        VisionPortal.Builder vpBuilder = new VisionPortal.Builder();
+        vpBuilder.setCamera(hardwareMap.get(WebcamName.class, "Webcam 1"));
+        vpBuilder.addProcessor(tpdProcessor);
+        vpBuilder.setCameraResolution(new Size(640, 480));
+        visionPortal = vpBuilder.build();
 
-    @Override
-    public void init_loop() {
     }
 
     @Override
     public void start() {
         state = 0;
-        spikeMarkZone = 0;
+        colorGuess = 0;
+        regionGuess = 0;
     }
-
     @Override
     public void loop() {
         telemetry.addData("State", state);
@@ -90,17 +70,21 @@ public class LaChouVision extends LaChouBase {
 
             // Detect the location of the team prop
             case 0:
-                while (!tpdProcessor.foundPixels()) {
-                    telemetry.addLine("Looking for pixels");
-                    telemetry.update();
+                telemetry.addLine("Guessing");
+                while (!tpdProcessor.guessed()) {
+                    this.colorGuess = tpdProcessor.getColorGuess();
+                    this.regionGuess = tpdProcessor.getRegionGuess();
                 }
-                spikeMarkZone = tpdProcessor.getSpikeMarkZone();
-                state = 1;
+                telemetry.addData("Calls", tpdProcessor.getNumberOfCalls());
+                telemetry.addData("Color", this.colorGuess);
+                telemetry.addData("Region", this.regionGuess);
+                state = 0;
+                //tpdProcessor.disable();
                 break;
 
             // Push pre-loaded purple pixel to the proper Spike Mark (20 points)'
             case 1:
-                moveToSpikeMark(spikeMarkZone);
+                moveToSpikeMark(this.colorGuess, this.regionGuess);
                 break;
 
             // Move to the correct backdrop
@@ -133,22 +117,81 @@ public class LaChouVision extends LaChouBase {
         }
     }
 
-
-    private void showColorSensorTelemetry() {
-        telemetry.addLine("Color Sensor");
-        telemetry.addData("Red", colorSensor.red());
-        telemetry.addData("Green", colorSensor.green());
-        telemetry.addData("Blue", colorSensor.blue());
-        telemetry.addData("Alpha", colorSensor.alpha());
+    private final void sleep(long milliseconds) {
+        try {
+            Thread.sleep(milliseconds);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
     }
 
-    private void moveToSpikeMark(int spikeMarkZone) {
-        switch (spikeMarkZone) {
+    private void moveToSpikeMark(int colorGuess, int regionGuess) {
+        switch (regionGuess) {
             case 1:
                 // Move to the left
+
+                // Move forward
+                mecanumDrive.driveRobotCentric(0, .2, 0, false);
+                do {
+                    odometry.updatePose();
+                    telemetry.addData("x", odometry.getPose().getX());
+                    telemetry.addData("y", odometry.getPose().getY());
+                    telemetry.update();
+                } while (odometry.getPose().getX() > -31);
+
+                // Turn left
+                mecanumDrive.driveRobotCentric(0, 0, -.2, false);
+                do {
+                    odometry.updatePose();
+                    telemetry.addData("Rotation", odometry.getPose().getRotation());
+                } while (odometry.getPose().getRotation().getDegrees() > -90);
+
+                // Move forward
+                mecanumDrive.driveRobotCentric(0, .2, 0, false);
+                do {
+                    odometry.updatePose();
+                    telemetry.addData("x", odometry.getPose().getX());
+                    telemetry.addData("y", odometry.getPose().getY());
+                    telemetry.update();
+                } while (odometry.getPose().getX() > -31);
+
+                // Stop
+                mecanumDrive.driveRobotCentric(0, 0, 0, false);
+                sleep(2_000);
+
+                // Move backward
+                mecanumDrive.driveRobotCentric(0, -0.2, 0, false);
+                do {
+                    odometry.updatePose();
+                    telemetry.addData("x", odometry.getPose().getX());
+                    telemetry.addData("y", odometry.getPose().getY());
+                    telemetry.update();
+                } while (odometry.getPose().getX() < -21);
+                mecanumDrive.driveRobotCentric(0, 0, 0, false);
+
+                sleep(2_000);
                 break;
             case 2:
-                // Move to the middle
+                // Move to the center
+                // Move to the right
+                mecanumDrive.driveRobotCentric(0, .2, 0, false);
+                do {
+                    odometry.updatePose();
+                    telemetry.addData("x", odometry.getPose().getX());
+                    telemetry.addData("y", odometry.getPose().getY());
+                    telemetry.update();
+                } while (odometry.getPose().getX() > -31);
+                mecanumDrive.driveRobotCentric(0, 0, 0, false);
+                sleep(2_000);
+                mecanumDrive.driveRobotCentric(0, -0.2, 0, false);
+                do {
+                    odometry.updatePose();
+                    telemetry.addData("x", odometry.getPose().getX());
+                    telemetry.addData("y", odometry.getPose().getY());
+                    telemetry.update();
+                } while (odometry.getPose().getX() < -21);
+                mecanumDrive.driveRobotCentric(0, 0, 0, false);
+                sleep(2_000);
                 break;
             case 3:
                 // Move to the right
