@@ -7,6 +7,7 @@ import com.arcrobotics.ftclib.gamepad.GamepadKeys;
 import com.arcrobotics.ftclib.gamepad.ToggleButtonReader;
 import com.arcrobotics.ftclib.hardware.motors.Motor;
 import com.arcrobotics.ftclib.hardware.motors.MotorEx;
+import com.arcrobotics.ftclib.kinematics.HolonomicOdometry;
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.hardware.bosch.BNO055IMUImpl;
 import com.qualcomm.hardware.bosch.JustLoggingAccelerationIntegrator;
@@ -35,6 +36,25 @@ import edu.spa.ftclib.internal.sensor.IntegratingGyroscopeSensor;
 
 @Autonomous(name = "Auto", group = "Meet 1")
 public class Meet1Auto extends LinearOpMode {
+    // The lateral distance between the left and right odometers
+    // is called the trackwidth. This is very important for
+    // determining angle for turning approximations
+    public static final double TRACKWIDTH = 15.375;
+
+    // Center wheel offset is the distance between the
+    // center of rotation of the robot and the center odometer.
+    // This is to correct for the error that might occur when turning.
+    // A negative offset means the odometer is closer to the back,
+    // while a positive offset means it is closer to the front.
+    public static final double CENTER_WHEEL_OFFSET = -5.375;
+
+    public static final double WHEEL_DIAMETER = 1.89;
+    // if needed, one can add a gearing term here
+    public static final double TICKS_PER_REV = 2000;
+    public static final double DISTANCE_PER_PULSE = Math.PI * WHEEL_DIAMETER / TICKS_PER_REV;
+    private Motor.Encoder leftOdometer, rightOdometer, centerOdometer;
+    private HolonomicOdometry odometry;
+
     GamepadEx driverOp, liftOp;
 
     ButtonReader buttonGreen, buttonRed, buttonBlue;
@@ -43,20 +63,27 @@ public class Meet1Auto extends LinearOpMode {
 
     boolean isBlue = true;
     boolean isBackdrop = true;
-
+    DcMotorEx motorIntake, motorLift;
     Servo servoPlate, servoArm, servoPixelRotate, servoPixelFlip, servoPixelLeft, servoPixelRight;
-    double pixelRotatePosition = STEMperFiConstants.PINCH_ROTATE_HORIZONTAL;
+    double pixelRotatePosition = STEMperFiConstants.PINCH_ROTATE_VERTICAL;
     double pixelFlipPosition = STEMperFiConstants.PINCH_FLIP_INTAKE;
-    double platePosition = STEMperFiConstants.PLATE_FLAT;
-    double armPosition = STEMperFiConstants.PLATE_ARM_INTAKE;
+    MecanumDrive mecanumDrive;
+
+
     /*
      * Code to run ONCE when the driver hits INIT
      */
     public void initRobot() {
-        servoPlate = hardwareMap.get(Servo.class, "plate");
-        servoPlate.setPosition(platePosition);
-        servoArm = hardwareMap.get(Servo.class, "arm");
-        servoArm.setPosition(armPosition);
+
+
+        motorLift = hardwareMap.get(DcMotorEx.class, "lift_c");
+        motorLift.setDirection(DcMotorSimple.Direction.REVERSE);
+        motorLift.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        motorLift.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        motorLift.setTargetPosition(STEMperFiConstants.LIFT_TARGET_INTAKE);
+        motorLift.setPower(.4);
+        motorLift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
         servoPixelRotate = hardwareMap.get(Servo.class, "rotate");
         servoPixelRotate.setPosition(pixelRotatePosition);
         servoPixelFlip = hardwareMap.get(Servo.class, "flip");
@@ -76,7 +103,7 @@ public class Meet1Auto extends LinearOpMode {
 //        Motor in_c = new Motor(hardwareMap, "drive_in_c", Motor.GoBILDA.RPM_312);
 //        Motor up_e = new Motor(hardwareMap, "drive_up_e", Motor.GoBILDA.RPM_312);
 //        Motor up_c = new Motor(hardwareMap, "drive_up_c", Motor.GoBILDA.RPM_312);
-
+/*
         frontLeft = hardwareMap.get(DcMotorEx.class, "drive_up_e");
         frontRight = hardwareMap.get(DcMotorEx.class, "drive_up_c");;
         frontLeft.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -85,6 +112,34 @@ public class Meet1Auto extends LinearOpMode {
         backLeft.setDirection(DcMotorSimple.Direction.REVERSE);
 
         driveMotors = new DcMotorEx[]{ frontLeft, backLeft, frontRight, backRight};
+*/
+        Motor in_e = new Motor(hardwareMap, "drive_in_e", Motor.GoBILDA.RPM_312);
+        Motor in_c = new Motor(hardwareMap, "drive_in_c", Motor.GoBILDA.RPM_312);
+        Motor up_e = new Motor(hardwareMap, "drive_up_e", Motor.GoBILDA.RPM_312);
+        Motor up_c = new Motor(hardwareMap, "drive_up_c", Motor.GoBILDA.RPM_312);
+        //MecanumDrive(Motor frontLeft, Motor frontRight, Motor backLeft, Motor backRight)
+        //mecanum = new MecanumDrive(frontLeft, frontRight, backLeft, backRight);
+        //mecanum = new MecanumDrive(up_c, up_e, in_c, in_e); // fb good, lr reverse, right counter clockwise
+        mecanumDrive = new MecanumDrive(in_c, in_e, up_c, up_e); // left correct, turn reverse? right counter clockwise
+        //mecanum = new MecanumDrive(up_e, up_c, in_e, in_c); // fb rev, lr rev, right counter clockwise
+        //mecanum = new MecanumDrive(in_e, in_c, up_e, up_c); // fb rev, lr cor, right counter clockwise
+
+        leftOdometer = in_e.encoder.setDistancePerPulse(DISTANCE_PER_PULSE);
+        rightOdometer = in_c.encoder.setDistancePerPulse(DISTANCE_PER_PULSE);
+        centerOdometer = up_c.encoder.setDistancePerPulse(DISTANCE_PER_PULSE);
+
+
+        leftOdometer.reset();
+        rightOdometer.reset();
+        centerOdometer.reset();;
+
+        odometry = new HolonomicOdometry(
+                leftOdometer::getDistance,
+                rightOdometer::getDistance,
+                centerOdometer::getDistance,
+                TRACKWIDTH, CENTER_WHEEL_OFFSET
+        );
+
 /*
         do {
             buttonGreen.readValue();
@@ -106,14 +161,14 @@ public class Meet1Auto extends LinearOpMode {
 */
 
     }
-
+/*
     public DcMotorEx frontLeft;
     public DcMotorEx frontRight;
     public DcMotorEx backLeft;
     public DcMotorEx backRight;
 
     public DcMotorEx[] driveMotors;
-
+*/
     /**
      * Override this method and place your code here.
      * <p>
@@ -125,7 +180,7 @@ public class Meet1Auto extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
         initRobot();
-        stopAndReset();
+        //stopAndReset();
 
         telemetry.addData("Waiting for Start!", "!!!!");
         telemetry.update();
@@ -133,9 +188,27 @@ public class Meet1Auto extends LinearOpMode {
 
 
         if (opModeIsActive()) {
-            moveForwardTicks(1_550, .2);
+            mecanumDrive.driveRobotCentric(0, .2, 0, false);
+            do {
+                odometry.updatePose();
+                telemetry.addData("x", odometry.getPose().getX());
+                telemetry.addData("y", odometry.getPose().getY());
+                telemetry.update();
+            } while (odometry.getPose().getX() > -31);
+            mecanumDrive.driveRobotCentric(0, 0, 0, false);
             sleep(2_000);
-            moveForwardTicks(-1_000, .2);
+            mecanumDrive.driveRobotCentric(0, -0.2, 0, false);
+            do {
+                odometry.updatePose();
+                telemetry.addData("x", odometry.getPose().getX());
+                telemetry.addData("y", odometry.getPose().getY());
+                telemetry.update();
+            } while (odometry.getPose().getX() < -21);
+            mecanumDrive.driveRobotCentric(0, 0, 0, false);
+            motorLift.setTargetPosition(0);
+            //moveForwardTicks(2_000, .2);
+            sleep(2_000);
+            //moveForwardTicks(-1_000, .2);
         }
     }
 /*
@@ -183,7 +256,7 @@ public class Meet1Auto extends LinearOpMode {
         } while (cp > ticks);
         stopAndReset();
     }
-*/
+
     public void moveForwardTicks(int ticks, double power) {
         stopAndReset();
         for (DcMotorEx motor : driveMotors) {
@@ -196,9 +269,8 @@ public class Meet1Auto extends LinearOpMode {
             telemetry.addData("fw_mm   fl.tar: ", ticks);
             telemetry.update();
         } while (frontLeft.isBusy());
-        stopAndReset();
     }
-/*
+
     public void moveForwardMM(long mm, double power) {
         int ticks = (int) (mm * STEMperFiConstants.TICKS_PER_MM);
         stopAndReset();
@@ -217,7 +289,7 @@ public class Meet1Auto extends LinearOpMode {
     public void moveBackwardsMM(long mm, double power) {
         moveForwardMM(-mm, power);
     }
-*/
+
     public void stopAndReset() {
         for (DcMotorEx motor : driveMotors) {
             motor.setPower(0);
@@ -225,7 +297,7 @@ public class Meet1Auto extends LinearOpMode {
             motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         }
     }
-/*
+
     // Move the robot forwards
     public void moveForwardCM(double cm, double power) {
         int ticks = (int) (cm * STEMperFiConstants.TICKS_PER_CM);

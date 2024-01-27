@@ -9,6 +9,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 @TeleOp(name = "LED TEST", group = "Test")
+@Disabled
 public class TestLEDOpMode extends OpMode {
     private QwiicLEDStrip ledStripFront;
     private QwiicLEDStrip ledStripBack;

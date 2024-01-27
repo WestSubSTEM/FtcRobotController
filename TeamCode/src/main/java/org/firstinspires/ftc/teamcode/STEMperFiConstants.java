@@ -6,12 +6,12 @@ import androidx.annotation.ColorInt;
 public class STEMperFiConstants {
 
 
-    public static final @ColorInt int COLOR_RED = Color.parseColor("red");
-    public static final @ColorInt int COLOR_ORANGE = Color.parseColor("orange");
-    public static final @ColorInt int COLOR_YELLOW = Color.parseColor("yellow");
-    public static final @ColorInt int COLOR_GREEN = Color.parseColor("green");
-    public static final @ColorInt int COLOR_BLUE = Color.parseColor("blue");
-    public static final @ColorInt int COLOR_PURPLE = Color.parseColor("purple");
+    public static final @ColorInt int COLOR_RED = Color.rgb(250, 0, 0);
+    public static final @ColorInt int COLOR_ORANGE =  Color.rgb(250, 165, 0);//Color.parseColor("orange");
+    public static final @ColorInt int COLOR_YELLOW = Color.rgb(250,250,200);// Color.parseColor("yellow");
+    public static final @ColorInt int COLOR_GREEN = Color.rgb(0,250,0);
+    public static final @ColorInt int COLOR_BLUE = Color.rgb(0,0,250);
+    public static final @ColorInt int COLOR_PURPLE = Color.rgb(128,0,128);
 
     public enum STATE {
         INTAKE,
@@ -26,16 +26,17 @@ public class STEMperFiConstants {
     
 
     public static final double PINCH_OPEN = 0.5;
-    public static final double PINCH_CLOSED = 0.85;
+    public static final double PINCH_CLOSED = 0.79;
+    public static final double PINCH_CLOSED_WALL = 0.86;
 
-    public static final double PINCH_FLIP_INTAKE = 0.41;
-    public static final double PINCH_FLIP_TRANSFER = 0.41;
-    public static final double PINCH_FLIP_HANG = 0.1;
+    public static final double PINCH_FLIP_INTAKE = 0.39;
+    public static final double PINCH_FLIP_TRANSFER = 0.39;
+    public static final double PINCH_FLIP_HANG = 0.09;
 
-    public static final double PINCH_FLIP_BACKDROP = 0.19;
+    public static final double PINCH_FLIP_BACKDROP = 0.16;
 
     // vertical 0.11 &  0.71
-    public static final double PINCH_ROTATE_VERTICAL = 0.71;
+    public static final double PINCH_ROTATE_VERTICAL = .075;
 
     //  Horizontal 1.0 & .4
     public static final double PINCH_ROTATE_HORIZONTAL = 0.41;
@@ -44,13 +45,16 @@ public class STEMperFiConstants {
     public static final double PINCH_ROTATE_LEFT = 0.55;
     public static final double PINCH_ROTATE_RIGHT = 0.3 ;
 
-    public static final int LIFT_TARGET_HANG = 2000;
-    public static final int LIFT_TARGET_PINCH = 0;
-    public static final int LIFT_TARGET_INTAKE = 100;
+    public static final int LIFT_TARGET_MAX = 2000;
+
+    public static final int LIFT_TARGET_HANG = 1400;
+    public static final int LIFT_TARGET_PINCH = 15;
+    public static final int LIFT_TARGET_INTAKE = 200;
     public static final int LIFT_TARGET_FLIP = 450;
 
-    public static final double INTAKE_SPEED = 0.4;
+    public static final double INTAKE_SPEED = 0.5;
 
+    public static final double FLIP_INCREMENT = 0.01;
     public static final long TICKS_PER_MM = Math.round(36400 /600);
     public static final int MM_PER_SQUARE = 600;
 

@@ -29,6 +29,9 @@
 
 package org.firstinspires.ftc.teamcode;
 
+import android.graphics.Color;
+import android.util.Size;
+
 import com.arcrobotics.ftclib.drivebase.MecanumDrive;
 import com.arcrobotics.ftclib.gamepad.ButtonReader;
 import com.arcrobotics.ftclib.gamepad.GamepadEx;
@@ -44,6 +47,11 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
+import org.firstinspires.ftc.teamcode.processors.TeamPropDetector;
+import org.firstinspires.ftc.vision.VisionPortal;
+import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
+
 /*
  * This file contains an example of an iterative (Non-Linear) "OpMode".
  * An OpMode is a 'program' that runs in either the autonomous or the teleop period of an FTC match.
@@ -58,7 +66,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
  * Remove or comment out the @Disabled line to add this OpMode to the Driver Station OpMode list
  */
 
-@TeleOp(name="Teleop 2", group="Meet 2")
+@TeleOp(name="Tele", group="Meet 2")
 public class Meet2Tele extends OpMode {
 
     // The lateral distance between the left and right odometers
@@ -106,22 +114,33 @@ public class Meet2Tele extends OpMode {
 
     ButtonReader buttonStateNext, buttonStatePrevious;
 
+    private VisionPortal visionPortal;
+    private AprilTagProcessor aprilTagProcessor;
+    private TeamPropDetector teamPropDetector;
+    private WebcamName webCam;
+
 
     /*
      * Code to run ONCE when the driver hits INIT
      */
     @Override
     public void init() {
+        webCam = hardwareMap.get(WebcamName.class, "Webcam 1");
+
         ledStripFront = hardwareMap.get(QwiicLEDStrip.class, "led");
         ledStripFront.setBrightness(2);
         ledStripFront.setColor(STEMperFiConstants.COLOR_RED);
 
         servoPixelRotate = hardwareMap.get(Servo.class, "rotate");
         servoPixelRotate.setPosition(pixelRotatePosition);
+        telemetry.addData("rotate", pixelRotatePosition);
+
         servoPixelFlip = hardwareMap.get(Servo.class, "flip");
         servoPixelFlip.setPosition(pixelFlipPosition);
+        telemetry.addData("flip", pixelFlipPosition);
+
         servoPixelLeft = hardwareMap.get(Servo.class, "left");
-        servoPixelFlip.setPosition(STEMperFiConstants.PINCH_OPEN);
+        servoPixelLeft.setPosition(STEMperFiConstants.PINCH_OPEN);
         servoPixelRight = hardwareMap.get(Servo.class, "right");
         servoPixelRight.setPosition(STEMperFiConstants.PINCH_OPEN);
 
@@ -174,12 +193,13 @@ public class Meet2Tele extends OpMode {
         leftOdometer = in_e.encoder.setDistancePerPulse(DISTANCE_PER_PULSE);
         rightOdometer = in_c.encoder.setDistancePerPulse(DISTANCE_PER_PULSE);
         centerOdometer = up_c.encoder.setDistancePerPulse(DISTANCE_PER_PULSE);
+        leftOdometer.setDirection(Motor.Direction.REVERSE);
 
-/*
+
         leftOdometer.reset();
         rightOdometer.reset();
         centerOdometer.reset();;
-*/
+
         odometry = new HolonomicOdometry(
                 leftOdometer::getDistance,
                 rightOdometer::getDistance,
@@ -195,10 +215,47 @@ public class Meet2Tele extends OpMode {
         motorLift.setDirection(DcMotorSimple.Direction.REVERSE);
         motorLift.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         motorLift.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        motorLift.setTargetPosition(STEMperFiConstants.LIFT_TARGET_INTAKE);
+        motorLift.setTargetPosition(0);
         motorLift.setPower(1);
         motorLift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
+        // VisionPortal
+        // AprilTag processor
+        /*
+        telemetry.addLine("Initializing april tag processor");
+        aprilTagProcessor = new AprilTagProcessor.Builder()
+                .setTagLibrary(AprilTagGameDatabase.getCurrentGameTagLibrary())
+                .setDrawTagID(true)
+                .setDrawTagOutline(true)
+                .setDrawAxes(true)
+                .setDrawCubeProjection(true)
+                .build();
+
+        */
+
+        // TeamPropDetector processor
+        telemetry.addLine("Initializing TeamPropDetector processor");
+        teamPropDetector = new TeamPropDetector();
+        // Vision Portal
+        telemetry.addLine("Initializing vision portal");
+        /*
+        visionPortal = VisionPortal.easyCreateWithDefaults(
+                hardwareMap.get(WebcamName.class, "Webcam 1"),
+                aprilTagProcessor,
+                tpdProcessor);
+         */
+        /*
+        visionPortal = VisionPortal.easyCreateWithDefaults(
+                hardwareMap.get(WebcamName.class, "Webcam 1"),
+                teamPropDetector);
+
+        VisionPortal.Builder vpBuilder = new VisionPortal.Builder();
+        vpBuilder.setCamera(hardwareMap.get(WebcamName.class, "Webcam 1"));
+        vpBuilder.addProcessor(teamPropDetector);
+        vpBuilder.setCameraResolution(new Size(720, 480));
+        visionPortal = vpBuilder.build();
+
+         */
     }
 
     /*
@@ -206,6 +263,9 @@ public class Meet2Tele extends OpMode {
      */
     @Override
     public void init_loop() {
+        telemetry.addData("left",leftOdometer.getPosition());
+        telemetry.addData("right",rightOdometer.getPosition());
+        telemetry.addData("center",centerOdometer.getPosition());
     }
 
     /*
@@ -221,6 +281,17 @@ public class Meet2Tele extends OpMode {
      */
     @Override
     public void loop() {
+        // vision portal
+        telemetry.addData("TeamPropDetector Calls", teamPropDetector.getCalls());
+        telemetry.addData("TeamPropDetector No. Pixels", teamPropDetector.getNumberOfPixels());
+        if (teamPropDetector.foundPixels()) {
+            int zone = teamPropDetector.getSpikeMarkZone();
+            telemetry.addData("Team Prop", "found in " + zone);
+        } else {
+            telemetry.addData("Team Prop", "not found");
+        }
+
+
         telemetry.addData("State", state.name());
         buttonStatePrevious.readValue();
         buttonStateNext.readValue();
@@ -268,12 +339,35 @@ public class Meet2Tele extends OpMode {
         telemetry.addData("Lift Target", motorLift.getTargetPosition());
         telemetry.addData("Lift CurPos", motorLift.getCurrentPosition());
 
-        servoPixelFlip.setPosition(pixelFlipPosition);
+        adjustFlipPosition();
+        //servoPixelFlip.setPosition(pixelFlipPosition);
         servoPixelRotate.setPosition(pixelRotatePosition);
+        telemetry.addData("flip target", pixelFlipPosition);
+        telemetry.addData("flip current", servoPixelFlip.getPosition());
+        telemetry.addData("rotate", pixelRotatePosition);
+
+    }
+
+    public void adjustFlipPosition() {
+        double currentPosition = servoPixelFlip.getPosition();
+        double newPosition = 0;
+        if (currentPosition < pixelFlipPosition) {
+            newPosition = currentPosition + STEMperFiConstants.FLIP_INCREMENT;
+            newPosition = Math.min(newPosition, pixelFlipPosition);
+        } else {
+            newPosition = currentPosition - STEMperFiConstants.FLIP_INCREMENT;
+            newPosition = Math.max(newPosition, pixelFlipPosition);
+        }
+        servoPixelFlip.setPosition(newPosition);
+    }
+
+    public boolean flipIsBusy() {
+        return servoPixelFlip.getPosition() != pixelFlipPosition;
     }
 
 
     public void intake() {
+        motorLift.setTargetPosition(STEMperFiConstants.LIFT_TARGET_INTAKE);
         if (buttonStateNext.wasJustPressed()) {
             state = STEMperFiConstants.STATE.TRANSFER_START;
             ledStripFront.turnAllOff();
@@ -283,11 +377,11 @@ public class Meet2Tele extends OpMode {
         servoPixelLeft.setPosition(STEMperFiConstants.PINCH_OPEN);
         servoPixelRight.setPosition(STEMperFiConstants.PINCH_OPEN);
         if (liftTriggerRight > 0.1 && !motorLift.isBusy()) {
-            // spin intake in
-            motorIntake.setPower(STEMperFiConstants.INTAKE_SPEED * liftTriggerRight);
-        } else if (liftTriggerLeft > 0.1 && !motorLift.isBusy()) {
             // eject pixels
-            motorIntake.setPower(-liftTriggerLeft);
+            motorIntake.setPower(-STEMperFiConstants.INTAKE_SPEED * liftTriggerRight);
+        } else if (liftTriggerLeft > 0.1 && !motorLift.isBusy()) {
+            // spin intake in
+            motorIntake.setPower(STEMperFiConstants.INTAKE_SPEED * liftTriggerLeft);
         } else {
             // keep plate flat so pixels don't slide down
             motorIntake.setPower(0);
@@ -300,35 +394,39 @@ public class Meet2Tele extends OpMode {
         //motorLift.setTargetPosition(STEMperFiConstants.LIFT_TARGET_FLIP);
         if (!motorLift.isBusy()) {
             servoPixelLeft.setPosition(STEMperFiConstants.PINCH_CLOSED);
-            servoPixelRight.setPosition(STEMperFiConstants.PINCH_CLOSED);
+            servoPixelRight.setPosition(STEMperFiConstants.PINCH_CLOSED_WALL);
             state = STEMperFiConstants.STATE.TRANSFER_PINCH;
             stateRuntime.reset();
         }
     }
 
     public void transferPinch() {
-        if (stateRuntime.milliseconds() > 250) {
-            motorLift.setTargetPosition(STEMperFiConstants.LIFT_TARGET_INTAKE);
+        if (stateRuntime.milliseconds() > 750) {
+            motorLift.setTargetPosition(STEMperFiConstants.LIFT_TARGET_FLIP);
+            motorLift.setPower(0.3);
             if (!motorLift.isBusy()) {
                 pixelFlipPosition = STEMperFiConstants.PINCH_FLIP_BACKDROP;
-                state = STEMperFiConstants.STATE.TRANSFER_FLIP;
-                stateRuntime.reset();
+                if (!flipIsBusy()) {
+                    state = STEMperFiConstants.STATE.TRANSFER_FLIP;
+                    stateRuntime.reset();
+                }
             }
         }
     }
 
     public void transferFlip() {
-        if (stateRuntime.milliseconds() > 500) {
-            motorLift.setTargetPosition(STEMperFiConstants.LIFT_TARGET_PINCH);
-            ledStripFront.setColor(STEMperFiConstants.COLOR_GREEN);
-            pixelRotatePosition = STEMperFiConstants.PINCH_ROTATE_HORIZONTAL;
-            state = STEMperFiConstants.STATE.PLACE_PIXEL;
-        }
+        motorLift.setPower(.8);
+        motorLift.setTargetPosition(STEMperFiConstants.LIFT_TARGET_PINCH);
+        ledStripFront.setBrightness(2);
+        ledStripFront.setColor(STEMperFiConstants.COLOR_GREEN);
+        pixelRotatePosition = STEMperFiConstants.PINCH_ROTATE_HORIZONTAL;
+        state = STEMperFiConstants.STATE.PLACE_PIXEL;
     }
 
     public void placePixel() {
         if (buttonStateNext.wasJustPressed()) {
             state = STEMperFiConstants.STATE.HANG;
+            ledStripFront.setBrightness(2);
             ledStripFront.setColor(STEMperFiConstants.COLOR_PURPLE);
             pixelFlipPosition = STEMperFiConstants.PINCH_FLIP_HANG;
             pixelRotatePosition = STEMperFiConstants.PINCH_ROTATE_HORIZONTAL;
@@ -350,15 +448,27 @@ public class Meet2Tele extends OpMode {
         manualLift();
 
         if (liftOp.getButton(GamepadKeys.Button.LEFT_BUMPER)) {
-            servoPixelLeft.setPosition(STEMperFiConstants.PINCH_OPEN);
+            servoPixelRight.setPosition(STEMperFiConstants.PINCH_OPEN);
         }
         if (liftOp.getButton(GamepadKeys.Button.RIGHT_BUMPER)) {
-            servoPixelRight.setPosition(STEMperFiConstants.PINCH_OPEN);
+            servoPixelLeft.setPosition(STEMperFiConstants.PINCH_OPEN);
+        }
+
+        if (liftTriggerRight > 0.1 && !motorLift.isBusy()) {
+            // eject pixels
+            motorIntake.setPower(-STEMperFiConstants.INTAKE_SPEED * liftTriggerRight);
+        } else if (liftTriggerLeft > 0.1 && !motorLift.isBusy()) {
+            // spin intake in
+            motorIntake.setPower(STEMperFiConstants.INTAKE_SPEED * liftTriggerLeft);
+        } else {
+            // keep plate flat so pixels don't slide down
+            motorIntake.setPower(0);
         }
 
     };
 
     public void hang() {
+        motorLift.setPower(1);
         if (buttonStateNext.wasJustPressed()) {
             state = STEMperFiConstants.STATE.INTAKE_PREP;
             ledStripFront.turnAllOff();
@@ -376,26 +486,31 @@ public class Meet2Tele extends OpMode {
         servoPixelLeft.setPosition(STEMperFiConstants.PINCH_OPEN);
         servoPixelRight.setPosition(STEMperFiConstants.PINCH_OPEN);
         // have to setTargetPosition here if using isBusy
-        motorLift.setTargetPosition(STEMperFiConstants.LIFT_TARGET_INTAKE);
+        motorLift.setTargetPosition(STEMperFiConstants.LIFT_TARGET_FLIP);
         if (!motorLift.isBusy()) {
             double stateDuration = stateRuntime.milliseconds();
-            if (stateDuration > 1000) {
+            if (stateDuration > 300 && !flipIsBusy()) {
                 motorLift.setTargetPosition(STEMperFiConstants.LIFT_TARGET_PINCH);
                 state = STEMperFiConstants.STATE.DRIVE_TO_HUMAN;
                 stateRuntime.reset();
-                ledStripFront.setColor(STEMperFiConstants.COLOR_YELLOW);
-            } else if (stateDuration > 500) {
+                ledStripFront.setBrightness(2);
+                ledStripFront.setColor(STEMperFiConstants.COLOR_ORANGE);
+            } else if (stateDuration > 250) {
                 // give robot half a second to rotate to vertical
                 pixelFlipPosition = STEMperFiConstants.PINCH_FLIP_INTAKE;
             }
+        } else {
+            stateRuntime.reset();
         }
     };
 
     public void driveToHuman() {
         if (buttonStateNext.wasJustPressed()) {
             state = STEMperFiConstants.STATE.INTAKE;
+            ledStripFront.setBrightness(2);
             ledStripFront.setColor(STEMperFiConstants.COLOR_RED);
             motorLift.setTargetPosition(STEMperFiConstants.LIFT_TARGET_INTAKE);
+            motorLift.setPower(.2);
             stateRuntime.reset();
         }
     }
@@ -403,7 +518,7 @@ public class Meet2Tele extends OpMode {
     void manualLift() {
         int targetPos = motorLift.getTargetPosition();
         targetPos += Math.round(liftOp.getLeftY() * 20);
-        targetPos = MathUtils.clamp(targetPos, STEMperFiConstants.LIFT_TARGET_INTAKE, STEMperFiConstants.LIFT_TARGET_HANG);
+        targetPos = MathUtils.clamp(targetPos, STEMperFiConstants.LIFT_TARGET_INTAKE, STEMperFiConstants.LIFT_TARGET_MAX);
         motorLift.setTargetPosition(targetPos);
     }
 

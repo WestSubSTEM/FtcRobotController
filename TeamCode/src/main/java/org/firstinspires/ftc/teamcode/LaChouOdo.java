@@ -12,7 +12,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 @TeleOp(name="LaChouBot Odom", group="FTC Lib")
-//@Disabled
+@Disabled
 public class LaChouOdo extends LinearOpMode {
     private MotorEx leftEncoder, rightEncoder, perpEncoder;
     private HolonomicOdometry odometry;
@@ -24,6 +24,7 @@ public class LaChouOdo extends LinearOpMode {
     public static final double TICKS_PER_REV = 2000;
     public static final double DISTANCE_PER_PULSE = Math.PI * WHEEL_DIAMETER / TICKS_PER_REV;
     MecanumDrive mecanum;
+    private Motor.Encoder leftOdometer, rightOdometer, centerOdometer;
     GamepadEx driverOp;
     @Override
     public void runOpMode() throws InterruptedException {
@@ -39,24 +40,33 @@ public class LaChouOdo extends LinearOpMode {
 
 
 //        leftEncoder = new MotorEx(hardwareMap, "left odometer");
-        leftEncoder = new MotorEx(hardwareMap, "frontright");
+        rightEncoder = new MotorEx(hardwareMap, "frontright");
         //rightEncoder = new MotorEx(hardwareMap, "right odometer");
-        rightEncoder = new MotorEx(hardwareMap, "backleft");
+        leftEncoder = new MotorEx(hardwareMap, "backleft");
+
         //perpEncoder = new MotorEx(hardwareMap, "center odometer");
         perpEncoder = new MotorEx(hardwareMap, "frontleft");
 
 
-        leftEncoder.setDistancePerPulse(DISTANCE_PER_PULSE);
-        rightEncoder.setDistancePerPulse(DISTANCE_PER_PULSE);
-        perpEncoder.setDistancePerPulse(DISTANCE_PER_PULSE);
+        leftOdometer = leftEncoder.setDistancePerPulse(DISTANCE_PER_PULSE);
+        rightOdometer = rightEncoder.setDistancePerPulse(DISTANCE_PER_PULSE);
+        centerOdometer = perpEncoder.setDistancePerPulse(DISTANCE_PER_PULSE);
 
+/*
+        leftOdometer.reset();
+        rightOdometer.reset();
+        centerOdometer.reset();;
+*/
         odometry = new HolonomicOdometry(
-                leftEncoder::getDistance,
-                rightEncoder::getDistance,
-                perpEncoder::getDistance,
-                TRACKWIDTH,
-                CENTER_WHEEL_OFFSET
+                leftOdometer::getDistance,
+                rightOdometer::getDistance,
+                centerOdometer::getDistance,
+                TRACKWIDTH, CENTER_WHEEL_OFFSET
         );
+
+        leftOdometer.reset();
+        rightOdometer.reset();
+        centerOdometer.reset();
 
         // read the current position from the position tracker
         odometry.updatePose(PositionTracker.robotPose);
@@ -67,6 +77,14 @@ public class LaChouOdo extends LinearOpMode {
         waitForStart();
 
         while (opModeIsActive() && !isStopRequested()) {
+
+            if (gamepad1.a) {
+                telemetry.addData("Odometry", "Reset");
+                leftOdometer.reset();
+                rightOdometer.reset();
+                centerOdometer.reset();
+            }
+
             odometry.updatePose();
             PositionTracker.robotPose = odometry.getPose();
 
@@ -77,15 +95,19 @@ public class LaChouOdo extends LinearOpMode {
             double ly = driverOp.getLeftY();
             double rx = driverOp.getRightX();
 
-        mecanum.driveRobotCentric(
-                lx,
-                ly,
-                rx,
-                false
-        );
+            odometry.updatePose();
+            mecanum.driveFieldCentric(lx, ly, rx, odometry.getPose().getRotation().getDegrees(), gamepad1.left_bumper || gamepad1.right_bumper);
+
+//        mecanum.driveRobotCentric(
+//                lx,
+//                ly,
+//                rx,
+//                false
+//        );
             telemetry.addData("Left X", lx);
             telemetry.addData("Left Y", ly);
             telemetry.addData("Right X", rx);
+            telemetry.addData("degrees", odometry.getPose().getRotation().getDegrees());
             // teleop things
 
             // update position

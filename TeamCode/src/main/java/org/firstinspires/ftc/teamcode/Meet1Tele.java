@@ -35,6 +35,7 @@ import com.arcrobotics.ftclib.gamepad.GamepadEx;
 import com.arcrobotics.ftclib.gamepad.GamepadKeys;
 import com.arcrobotics.ftclib.hardware.motors.Motor;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -62,6 +63,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
  */
 
 @TeleOp(name="Teleop", group="Meet 1")
+@Disabled
 public class Meet1Tele extends OpMode {
 
     // Declare OpMode members.
@@ -75,8 +77,7 @@ public class Meet1Tele extends OpMode {
 
     DcMotorEx motorIntake, motorLift;
 
-    double platePosition = STEMperFiConstants.PLATE_FLAT;
-    double armPosition = STEMperFiConstants.PLATE_ARM_INTAKE;
+
     //int liftTarget = 0;
     long timer = 0;
 
@@ -96,10 +97,7 @@ public class Meet1Tele extends OpMode {
      */
     @Override
     public void init() {
-        servoPlate = hardwareMap.get(Servo.class, "plate");
-        servoPlate.setPosition(platePosition);
-        servoArm = hardwareMap.get(Servo.class, "arm");
-        servoArm.setPosition(armPosition);
+
         servoPixelRotate = hardwareMap.get(Servo.class, "rotate");
         servoPixelRotate.setPosition(pixelRotatePosition);
         servoPixelFlip = hardwareMap.get(Servo.class, "flip");
@@ -245,8 +243,7 @@ public class Meet1Tele extends OpMode {
         telemetry.addData("Lift Target", motorLift.getTargetPosition());
         telemetry.addData("Lift CurPos", motorLift.getCurrentPosition());
 
-        servoPlate.setPosition(platePosition);
-        servoArm.setPosition(armPosition);
+
         servoPixelFlip.setPosition(pixelFlipPosition);
         servoPixelRotate.setPosition(pixelRotatePosition);
     }
@@ -261,23 +258,16 @@ public class Meet1Tele extends OpMode {
         if (liftTriggerRight > 0.1) {
             // spin intake in
             motorIntake.setPower(STEMperFiConstants.INTAKE_SPEED * liftTriggerRight);
-            armPosition = STEMperFiConstants.PLATE_ARM_INTAKE;
-            platePosition = STEMperFiConstants.PLATE_INTAKE;
+
         } else if (liftTriggerLeft > 0.1) {
             // eject pixels
             motorIntake.setPower(-liftTriggerLeft);
             telemetry.addData("Intake", -liftTriggerLeft);
-            platePosition = STEMperFiConstants.PLATE_INTAKE;
-            armPosition = STEMperFiConstants.PLATE_ARM_INTAKE;
+
         } else {
             // keep plate flat so pixels don't slide down
             motorIntake.setPower(0);
-            platePosition = STEMperFiConstants.PLATE_FLAT;
-            if (liftOp.getButton(GamepadKeys.Button.RIGHT_BUMPER)){
-                armPosition = STEMperFiConstants.PLATE_ARM_INTAKE;
-            }else {
-                armPosition = STEMperFiConstants.PLATE_ARM_PINCH;
-            }
+
         }
     }
 
@@ -298,7 +288,7 @@ public class Meet1Tele extends OpMode {
         if (!motorLift.isBusy()) {
             pixelRotatePosition = STEMperFiConstants.PINCH_ROTATE_VERTICAL;
             pixelFlipPosition = STEMperFiConstants.PINCH_FLIP_TRANSFER;
-            platePosition = STEMperFiConstants.PLATE_PINCH;
+
             manualLift();
         }
     }
@@ -317,7 +307,7 @@ public class Meet1Tele extends OpMode {
         if (!motorLift.isBusy()) {
             servoPixelRight.setPosition(STEMperFiConstants.PINCH_CLOSED);
             servoPixelLeft.setPosition(STEMperFiConstants.PINCH_CLOSED);
-            armPosition = STEMperFiConstants.PLATE_ARM_INTAKE;
+
         }
     }
 
@@ -349,7 +339,7 @@ public class Meet1Tele extends OpMode {
         buttonLiftLeft.readValue();
         buttonLiftRight.readValue();
         buttonLiftDown.readValue();
-        platePosition = STEMperFiConstants.PLATE_FLAT;
+
         if (buttonLiftDown.wasJustPressed()) {
             pixelRotatePosition = STEMperFiConstants.PINCH_ROTATE_HORIZONTAL;
         } else if (buttonLiftRight.wasJustPressed()) {
@@ -379,7 +369,7 @@ public class Meet1Tele extends OpMode {
             state = STEMperFiConstants.STATE.INTAKE_PREP;
             stateRuntime.reset();
         }
-        platePosition = STEMperFiConstants.PLATE_FLAT;
+
         pixelRotatePosition = STEMperFiConstants.PINCH_ROTATE_VERTICAL;
         if (stateRuntime.milliseconds() > 500) {
             pixelFlipPosition = STEMperFiConstants.PINCH_FLIP_HANG;
@@ -388,7 +378,7 @@ public class Meet1Tele extends OpMode {
     }
 
     public void prepIntake() {
-        platePosition = STEMperFiConstants.PLATE_FLAT;
+
         pixelRotatePosition = STEMperFiConstants.PINCH_ROTATE_VERTICAL;
         servoPixelLeft.setPosition(STEMperFiConstants.PINCH_OPEN);
         servoPixelRight.setPosition(STEMperFiConstants.PINCH_OPEN);
