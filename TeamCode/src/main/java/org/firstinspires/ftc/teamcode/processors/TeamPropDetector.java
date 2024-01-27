@@ -13,7 +13,7 @@ import org.opencv.imgproc.Imgproc;
 import java.util.ArrayList;
 import java.util.List;
 
-public class TeamPropDetectorProcessor implements VisionProcessor {
+public class TeamPropDetector implements VisionProcessor {
 
     int calls = 0;
 

@@ -29,46 +29,35 @@
 
 package org.firstinspires.ftc.teamcode;
 
-import android.util.Size;
-
 import com.arcrobotics.ftclib.command.button.GamepadButton;
 import com.arcrobotics.ftclib.drivebase.MecanumDrive;
 import com.arcrobotics.ftclib.gamepad.GamepadEx;
 import com.arcrobotics.ftclib.gamepad.GamepadKeys;
 import com.arcrobotics.ftclib.hardware.motors.Motor;
-import com.arcrobotics.ftclib.hardware.motors.Motor.Direction;
 import com.arcrobotics.ftclib.hardware.motors.MotorEx;
 import com.arcrobotics.ftclib.hardware.motors.Motor.Encoder;
 import com.arcrobotics.ftclib.kinematics.HolonomicOdometry;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
-
-import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
-import org.firstinspires.ftc.vision.VisionPortal;
-import org.firstinspires.ftc.vision.apriltag.AprilTagGameDatabase;
-import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
-import org.firstinspires.ftc.vision.tfod.TfodProcessor;
 
 @TeleOp(name="LaChouBase", group="FTC Lib")
 public class LaChouBase extends OpMode {
 
-    private ElapsedTime runtime = new ElapsedTime();
+    protected ElapsedTime runtime = new ElapsedTime();
 
-    private MotorEx backRight, backLeft, frontRight, frontLeft;
-    private MecanumDrive mecanum;
-    private Encoder leftEncoder, rightEncoder, perpEncoder;
-    private HolonomicOdometry odometry;
-    public static final double TRACK_WIDTH = 10.25;
-    public static final double CENTER_WHEEL_OFFSET = -2;
-    public static final double WHEEL_DIAMETER = 1.89;
-    public static final double TICKS_PER_REV = 2000;
-    public static final double DISTANCE_PER_PULSE = Math.PI * WHEEL_DIAMETER / TICKS_PER_REV;
+    protected MotorEx backRight, backLeft, frontRight, frontLeft;
+    protected MecanumDrive mecanumDrive;
+    protected Encoder leftEncoder, rightEncoder, perpEncoder;
+    protected HolonomicOdometry odometry;
+    protected static final double TRACK_WIDTH = 10.25;
+    protected static final double CENTER_WHEEL_OFFSET = -2;
+    protected static final double WHEEL_DIAMETER = 1.89;
+    protected static final double TICKS_PER_REV = 2000;
+    protected static final double DISTANCE_PER_PULSE = Math.PI * WHEEL_DIAMETER / TICKS_PER_REV;
 
-    private GamepadEx driverOp;
-    private GamepadButton leftBumper, rightBumper, aButton, bButton, xButton, yButton;
+    protected GamepadEx driverOp;
+    protected GamepadButton leftBumper, rightBumper, aButton, bButton, xButton, yButton;
 
     /*
      * Code to run ONCE when the driver hits INIT
@@ -84,7 +73,7 @@ public class LaChouBase extends OpMode {
         frontRight = new MotorEx(hardwareMap, "frontright", Motor.GoBILDA.RPM_312);
         frontLeft = new MotorEx(hardwareMap, "frontleft", Motor.GoBILDA.RPM_312);
 
-        mecanum = new MecanumDrive(backRight, backLeft, frontRight, frontLeft);
+        mecanumDrive = new MecanumDrive(backRight, backLeft, frontRight, frontLeft);
 
         // Encoders and Odometry
         telemetry.addLine("Initializing encoders and odometry");
@@ -155,7 +144,7 @@ public class LaChouBase extends OpMode {
         PositionTracker.robotPose = odometry.getPose();
         showOdometryTelemetry();
 
-        mecanum.driveFieldCentric(
+        mecanumDrive.driveFieldCentric(
                 driverOp.getLeftX(),
                 driverOp.getLeftY(),
                 driverOp.getRightX(),
