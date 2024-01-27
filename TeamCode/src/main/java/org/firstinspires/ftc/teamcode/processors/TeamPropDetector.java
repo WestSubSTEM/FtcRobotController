@@ -1,12 +1,15 @@
 package org.firstinspires.ftc.teamcode.processors;
 
 import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
 
 import org.firstinspires.ftc.robotcore.internal.camera.calibration.CameraCalibration;
 import org.firstinspires.ftc.vision.VisionProcessor;
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
+import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
 
@@ -29,6 +32,10 @@ public class TeamPropDetector implements VisionProcessor {
     boolean guessed = false;
 
     boolean enabled = true;
+
+    public Rect region1Rect;
+    public Rect region2Rect = new Rect(20, 20, 50, 50);
+    public Rect region3Rect = new Rect(20, 20, 50, 50);
 
     @Override
     public void init(int width, int height, CameraCalibration calibration) {
@@ -61,6 +68,10 @@ public class TeamPropDetector implements VisionProcessor {
 
         int height = hsvImage.rows();
         int width = hsvImage.cols();
+
+        this.region1Rect = new Rect(0 , height / 3 * 2, width / 3, height / 3);
+        this.region2Rect = new Rect(width/3, height / 3 * 2, width / 3, height / 3);
+        this.region3Rect = new Rect(width/3 * 2, height / 3 * 2, width / 3, height / 3);
 
         List<Mat> regions = new ArrayList<>();
         regions.add(hsvImage.submat(height / 3 * 2, height, 0, width / 3));
@@ -113,7 +124,28 @@ public class TeamPropDetector implements VisionProcessor {
                             float scaleBmpPxToCanvasPx,
                             float scaleCanvasDensity,
                             Object userContext) {
+        Paint rectPaint = new Paint();
+        rectPaint.setColor(Color.RED);
+        rectPaint.setStyle(Paint.Style.STROKE);
+        rectPaint.setStrokeWidth(scaleCanvasDensity * 4);
+        if (this.region1Rect != null) {
+            canvas.drawRect(makeGraphicsRect(this.region1Rect, scaleBmpPxToCanvasPx), rectPaint);
+        }
+        if (this.region2Rect != null) {
+            canvas.drawRect(makeGraphicsRect(this.region2Rect, scaleBmpPxToCanvasPx), rectPaint);
+        }
+        if (this.region3Rect != null) {
+            canvas.drawRect(makeGraphicsRect(this.region3Rect, scaleBmpPxToCanvasPx), rectPaint);
+        }
+    }
 
+    private android.graphics.Rect makeGraphicsRect(Rect rect, float scaleBmpPxToCanvasPx) {
+        int left = Math.round(rect.x * scaleBmpPxToCanvasPx);
+        int top = Math.round(rect.y * scaleBmpPxToCanvasPx);
+        int right = left + Math.round(rect.width * scaleBmpPxToCanvasPx);
+        int bottom = top + Math.round(rect.height * scaleBmpPxToCanvasPx);
+
+        return new android.graphics.Rect(left, top, right, bottom);
     }
 
     public boolean guessed() {
