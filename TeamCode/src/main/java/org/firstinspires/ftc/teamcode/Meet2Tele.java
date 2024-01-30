@@ -48,6 +48,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
+import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 import org.firstinspires.ftc.teamcode.processors.TeamPropDetector;
 import org.firstinspires.ftc.vision.VisionPortal;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
@@ -104,9 +105,9 @@ public class Meet2Tele extends OpMode {
     //int liftTarget = 0;
     long timer = 0;
 
-    ButtonReader buttonLiftTop, buttonLiftLeft, buttonLiftRight, buttonLiftDown;
+    ButtonReader buttonLiftTop, buttonLiftLeft, buttonLiftRight, buttonLiftDown, buttonDroneLaunch;
 
-    Servo servoPlate, servoArm, servoPixelRotate, servoPixelFlip, servoPixelLeft, servoPixelRight;
+    Servo servoPixelRotate, servoPixelFlip, servoPixelLeft, servoPixelRight, servoDrone;
     double pixelRotatePosition = STEMperFiConstants.PINCH_ROTATE_VERTICAL;
     double pixelFlipPosition = STEMperFiConstants.PINCH_FLIP_INTAKE;
 
@@ -144,12 +145,15 @@ public class Meet2Tele extends OpMode {
         servoPixelRight = hardwareMap.get(Servo.class, "right");
         servoPixelRight.setPosition(STEMperFiConstants.PINCH_OPEN);
 
+        servoDrone = hardwareMap.get(Servo.class, "drone");
+        servoDrone.setPosition(STEMperFiConstants.DRONE_CLOSE);
+
         // the extended gamepad object
         driverOp = new GamepadEx(gamepad1);
         liftOp = new GamepadEx(gamepad2);
         buttonStateNext = new ButtonReader(liftOp, GamepadKeys.Button.DPAD_UP);
         buttonStatePrevious = new ButtonReader(liftOp, GamepadKeys.Button.DPAD_DOWN);
-
+        buttonDroneLaunch = new ButtonReader(driverOp, GamepadKeys.Button.Y);
 
         buttonLiftTop = new ButtonReader(liftOp, GamepadKeys.Button.Y);
         buttonLiftLeft = new ButtonReader(liftOp, GamepadKeys.Button.X);
@@ -195,11 +199,11 @@ public class Meet2Tele extends OpMode {
         centerOdometer = up_c.encoder.setDistancePerPulse(DISTANCE_PER_PULSE);
         leftOdometer.setDirection(Motor.Direction.REVERSE);
 
-
+/*
         leftOdometer.reset();
         rightOdometer.reset();
         centerOdometer.reset();;
-
+*/
         odometry = new HolonomicOdometry(
                 leftOdometer::getDistance,
                 rightOdometer::getDistance,
@@ -237,14 +241,13 @@ public class Meet2Tele extends OpMode {
         telemetry.addLine("Initializing TeamPropDetector processor");
         teamPropDetector = new TeamPropDetector();
         // Vision Portal
+       /*
         telemetry.addLine("Initializing vision portal");
-        /*
+
         visionPortal = VisionPortal.easyCreateWithDefaults(
                 hardwareMap.get(WebcamName.class, "Webcam 1"),
                 aprilTagProcessor,
                 tpdProcessor);
-         */
-        /*
         visionPortal = VisionPortal.easyCreateWithDefaults(
                 hardwareMap.get(WebcamName.class, "Webcam 1"),
                 teamPropDetector);
@@ -309,6 +312,11 @@ public class Meet2Tele extends OpMode {
         odometry.updatePose();
         mecanumDrive.driveFieldCentric(lx, ly, rx, odometry.getPose().getRotation().getDegrees(), gamepad1.left_bumper || gamepad1.right_bumper);
 
+        // launch drone
+        buttonDroneLaunch.readValue();
+        if (buttonDroneLaunch.wasJustPressed()) {
+            servoDrone.setPosition(STEMperFiConstants.DRONE_LAUNCH);
+        }
 
         // read controls
 
@@ -348,7 +356,8 @@ public class Meet2Tele extends OpMode {
         telemetry.addData("flip target", pixelFlipPosition);
         telemetry.addData("flip current", servoPixelFlip.getPosition());
         telemetry.addData("rotate", pixelRotatePosition);
-
+        telemetry.addData("liftPower", motorLift.getPower());
+        telemetry.addData("liftCurrent", motorLift.getCurrent(CurrentUnit.AMPS));
     }
 
     public void adjustFlipPosition() {

@@ -148,16 +148,19 @@ public class Meet2Auto extends OpMode {
 
             // Detect the location of the team prop
             case 0:
-                telemetry.addLine("Guessing");
-                while (!tpdProcessor.guessed()) {
+                if (tpdProcessor.guessed()) {
+                    telemetry.addLine("Guessing");
                     this.colorGuess = tpdProcessor.getColorGuess();
                     this.regionGuess = tpdProcessor.getRegionGuess();
+                    telemetry.addData("Calls", tpdProcessor.getNumberOfCalls());
+                    telemetry.addData("Color", this.colorGuess);
+                    telemetry.addData("Region", this.regionGuess);
+                    telemetry.addData("Largest Area Found", tpdProcessor.getLargestAreaFound());
+                    //tpdProcessor.disable();
+                    //state = 1;
+                } else {
+                    telemetry.addLine("Guessing not ready yet");
                 }
-                telemetry.addData("Calls", tpdProcessor.getNumberOfCalls());
-                telemetry.addData("Color", this.colorGuess);
-                telemetry.addData("Region", this.regionGuess);
-                state = 0;
-                //tpdProcessor.disable();
                 break;
 
             // Push pre-loaded purple pixel to the proper Spike Mark (20 points)'

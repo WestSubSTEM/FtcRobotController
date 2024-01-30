@@ -34,6 +34,7 @@ import edu.spa.ftclib.internal.sensor.IntegratingGyroscopeSensor;
  */
 
 
+@Disabled
 @Autonomous(name = "Auto", group = "Meet 1")
 public class Meet1Auto extends LinearOpMode {
     // The lateral distance between the left and right odometers

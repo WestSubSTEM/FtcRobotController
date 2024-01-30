@@ -24,16 +24,18 @@ public class STEMperFiConstants {
         INTAKE_PREP
     };
     
+    public static final double DRONE_CLOSE = .44;
+    public static final double DRONE_LAUNCH = .7;
 
     public static final double PINCH_OPEN = 0.5;
     public static final double PINCH_CLOSED = 0.79;
     public static final double PINCH_CLOSED_WALL = 0.86;
 
-    public static final double PINCH_FLIP_INTAKE = 0.39;
-    public static final double PINCH_FLIP_TRANSFER = 0.39;
-    public static final double PINCH_FLIP_HANG = 0.09;
+    public static final double PINCH_FLIP_INTAKE = 0.43; //0.39;
+    public static final double PINCH_FLIP_TRANSFER = 0.43; //0.39;
+    public static final double PINCH_FLIP_HANG = 0.13; //0.09;
 
-    public static final double PINCH_FLIP_BACKDROP = 0.16;
+    public static final double PINCH_FLIP_BACKDROP = 0.2; //0.16;
 
     // vertical 0.11 &  0.71
     public static final double PINCH_ROTATE_VERTICAL = .075;

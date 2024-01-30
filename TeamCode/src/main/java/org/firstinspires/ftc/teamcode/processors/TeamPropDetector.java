@@ -30,12 +30,14 @@ public class TeamPropDetector implements VisionProcessor {
 
     boolean enabled = true;
 
+    double largestAreaFound = 0.0;
+
     @Override
     public void init(int width, int height, CameraCalibration calibration) {
 
     }
 
-    private static double findLargestContour(Mat image, Scalar lowerBound, Scalar upperBound) {
+    private double findLargestContour(Mat image, Scalar lowerBound, Scalar upperBound) {
         Mat mask = new Mat();
         Core.inRange(image, lowerBound, upperBound, mask);
 
@@ -43,7 +45,7 @@ public class TeamPropDetector implements VisionProcessor {
         Mat hierarchy = new Mat();
         Imgproc.findContours(mask, contours, hierarchy, Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_SIMPLE);
 
-        double largestArea = 0;
+        double largestArea = 0.0;
 
         for (MatOfPoint contour : contours) {
             double area = Imgproc.contourArea(contour);
@@ -67,17 +69,23 @@ public class TeamPropDetector implements VisionProcessor {
         regions.add(hsvImage.submat(height / 3 * 2, height, width / 3, (width / 3) * 2));
         regions.add(hsvImage.submat(height / 3 * 2, height, (width / 3) * 2, width));
 
-        Scalar[] colorBounds = {
+        Scalar[] colorBoundsLower = {
                 new Scalar(90, 50, 50),   // Blue
                 new Scalar(0, 50, 50),    // Red 1
                 new Scalar(160, 50, 50)  // Red 2
         };
 
+        Scalar[] colorBoundsUpper = {
+                new Scalar(130, 50, 50),   // Blue
+                new Scalar(10, 50, 50),    // Red 1
+                new Scalar(180, 50, 50)  // Red 2
+        };
+
         double largestArea = 0;
 
         for (int regionIndex = 0; regionIndex < regions.size(); regionIndex++) {
-            for (int colorIndex = 0; colorIndex < colorBounds.length; colorIndex++) {
-                double area = findLargestContour(regions.get(regionIndex), colorBounds[colorIndex], colorBounds[colorIndex]);
+            for (int colorIndex = 0; colorIndex < colorBoundsLower.length; colorIndex++) {
+                double area = findLargestContour(regions.get(regionIndex), colorBoundsLower[colorIndex], colorBoundsUpper[colorIndex]);
                 if (area > largestArea) {
                     largestArea = area;
                     if (colorIndex == 0) {
@@ -90,6 +98,7 @@ public class TeamPropDetector implements VisionProcessor {
             }
         }
 
+        this.largestAreaFound = largestArea;
         this.guessed = true;
     }
 
@@ -137,5 +146,9 @@ public class TeamPropDetector implements VisionProcessor {
 
     public int getNumberOfCalls() {
         return this.calls;
+    }
+
+    public double getLargestAreaFound() {
+        return this.largestAreaFound;
     }
 }
