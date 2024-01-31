@@ -71,7 +71,7 @@ public class LaChouVision extends LaChouBase {
             // Detect the location of the team prop
             case 0:
                 telemetry.addLine("Guessing");
-                while (!tpdProcessor.guessed()) {
+                while (!tpdProcessor.isGuessed()) {
                     this.colorGuess = tpdProcessor.getColorGuess();
                     this.regionGuess = tpdProcessor.getRegionGuess();
                 }

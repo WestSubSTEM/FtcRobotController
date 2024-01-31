@@ -62,7 +62,7 @@ public class TeamPropDetector implements VisionProcessor {
         return largestArea;
     }
 
-    private void guessProp(Mat image) {
+    public void guessProp(Mat image) {
         Mat hsvImage = new Mat();
         Imgproc.cvtColor(image, hsvImage, Imgproc.COLOR_BGR2HSV);
 
@@ -78,17 +78,17 @@ public class TeamPropDetector implements VisionProcessor {
         regions.add(hsvImage.submat(height / 3 * 2, height, width / 3, (width / 3) * 2));
         regions.add(hsvImage.submat(height / 3 * 2, height, (width / 3) * 2, width));
 
-        Scalar[] colorBounds = {
-                new Scalar(90, 50, 50),   // Blue
-                new Scalar(0, 50, 50),    // Red 1
-                new Scalar(160, 50, 50)  // Red 2
+        Scalar[][] colorBounds = {
+                { new Scalar(90, 50, 50), new Scalar(100, 255, 255) },   // Blue
+                { new Scalar(0, 50, 50), new Scalar(10, 255, 255) },    // Red 1
+                { new Scalar(160, 50, 50), new Scalar(180, 255, 255) }  // Red 2
         };
 
         double largestArea = 0;
 
         for (int regionIndex = 0; regionIndex < regions.size(); regionIndex++) {
             for (int colorIndex = 0; colorIndex < colorBounds.length; colorIndex++) {
-                double area = findLargestContour(regions.get(regionIndex), colorBounds[colorIndex], colorBounds[colorIndex]);
+                double area = findLargestContour(regions.get(regionIndex), colorBounds[colorIndex][0], colorBounds[colorIndex][1]);
                 if (area > largestArea) {
                     largestArea = area;
                     if (colorIndex == 0) {
@@ -148,7 +148,7 @@ public class TeamPropDetector implements VisionProcessor {
         return new android.graphics.Rect(left, top, right, bottom);
     }
 
-    public boolean guessed() {
+    public boolean isGuessed() {
         return this.guessed;
     }
 

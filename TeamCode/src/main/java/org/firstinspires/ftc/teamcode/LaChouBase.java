@@ -44,20 +44,20 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 @TeleOp(name="LaChouBase", group="FTC Lib")
 public class LaChouBase extends OpMode {
 
-    protected ElapsedTime runtime = new ElapsedTime();
+    private ElapsedTime runtime = new ElapsedTime();
 
-    protected MotorEx backRight, backLeft, frontRight, frontLeft;
+    private MotorEx backRight, backLeft, frontRight, frontLeft;
     protected MecanumDrive mecanumDrive;
-    protected Encoder leftEncoder, rightEncoder, perpEncoder;
+    private Encoder leftEncoder, rightEncoder, perpEncoder;
     protected HolonomicOdometry odometry;
-    protected static final double TRACK_WIDTH = 10.25;
-    protected static final double CENTER_WHEEL_OFFSET = -2;
-    protected static final double WHEEL_DIAMETER = 1.89;
-    protected static final double TICKS_PER_REV = 2000;
-    protected static final double DISTANCE_PER_PULSE = Math.PI * WHEEL_DIAMETER / TICKS_PER_REV;
+    private static final double TRACK_WIDTH = 10.25;
+    private static final double CENTER_WHEEL_OFFSET = -2;
+    private static final double WHEEL_DIAMETER = 1.89;
+    private static final double TICKS_PER_REV = 2000;
+    private static final double DISTANCE_PER_PULSE = Math.PI * WHEEL_DIAMETER / TICKS_PER_REV;
 
-    protected GamepadEx driverOp;
-    protected GamepadButton leftBumper, rightBumper, aButton, bButton, xButton, yButton;
+    private GamepadEx driverOp;
+    private GamepadButton leftBumper, rightBumper, aButton, bButton, xButton, yButton;
 
     /*
      * Code to run ONCE when the driver hits INIT
@@ -186,6 +186,5 @@ public class LaChouBase extends OpMode {
         telemetry.addData("Right Encoder", rightEncoder.getDistance());
         telemetry.addData("Perp Encoder", perpEncoder.getDistance());
     }
-
 
 }
