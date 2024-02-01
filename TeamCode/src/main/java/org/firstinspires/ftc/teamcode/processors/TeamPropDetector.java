@@ -18,7 +18,9 @@ import java.util.List;
 
 public class TeamPropDetector implements VisionProcessor {
 
-    int calls = 0;
+    int numberCalls = 0;
+    int numberGuesses = 0;
+    int numberFinds = 0;
 
     List<MatOfPoint> contours = new ArrayList<>();
     List<MatOfPoint> pixels = new ArrayList<>();
@@ -37,12 +39,14 @@ public class TeamPropDetector implements VisionProcessor {
     public Rect region2Rect = new Rect(20, 20, 50, 50);
     public Rect region3Rect = new Rect(20, 20, 50, 50);
 
+    public List<Rect> objectRects = new ArrayList<>();
+
     @Override
     public void init(int width, int height, CameraCalibration calibration) {
 
     }
 
-    private static double findLargestContour(Mat image, Scalar lowerBound, Scalar upperBound) {
+    private MatOfPoint findLargestContour(Mat image, Scalar lowerBound, Scalar upperBound) {
         Mat mask = new Mat();
         Core.inRange(image, lowerBound, upperBound, mask);
 
@@ -51,18 +55,22 @@ public class TeamPropDetector implements VisionProcessor {
         Imgproc.findContours(mask, contours, hierarchy, Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_SIMPLE);
 
         double largestArea = 0;
+        MatOfPoint largestContour = null;
 
         for (MatOfPoint contour : contours) {
             double area = Imgproc.contourArea(contour);
             if (area > largestArea) {
+                this.numberFinds++;
                 largestArea = area;
+                largestContour = contour; // Keep track of the largest contour
             }
         }
 
-        return largestArea;
+        return largestContour;
     }
 
     public void guessProp(Mat image) {
+        this.numberGuesses++;
         Mat hsvImage = new Mat();
         Imgproc.cvtColor(image, hsvImage, Imgproc.COLOR_BGR2HSV);
 
@@ -88,27 +96,41 @@ public class TeamPropDetector implements VisionProcessor {
 
         for (int regionIndex = 0; regionIndex < regions.size(); regionIndex++) {
             for (int colorIndex = 0; colorIndex < colorBounds.length; colorIndex++) {
-                double area = findLargestContour(regions.get(regionIndex), colorBounds[colorIndex][0], colorBounds[colorIndex][1]);
-                if (area > largestArea) {
-                    largestArea = area;
-                    if (colorIndex == 0) {
-                        this.colorGuess = 1;
-                    } else {
-                        this.colorGuess = 2;
+                // Find the largest contour in the region
+                MatOfPoint largestContour = findLargestContour(regions.get(regionIndex), colorBounds[colorIndex][0], colorBounds[colorIndex][1]);
+
+                if (largestContour != null) {
+                    // Add a bounding rectangle to draw on the screen
+                    Rect boundingRect = Imgproc.boundingRect(largestContour); // Compute the bounding rectangle for the largest contour
+//                    objectRects.add(boundingRect); // Add the rectangle to the list
+
+                    // Check if the area of the contour is larger than the largest area found so far
+                    double area = Imgproc.contourArea(largestContour);
+                    if (area > largestArea) {
+                        largestArea = area;
+                        if (colorIndex == 0) {
+                            this.colorGuess = 1;
+                        } else {
+                            this.colorGuess = 2;
+                        }
+                        this.regionGuess = regionIndex + 1;
                     }
-                    this.regionGuess = regionIndex + 1;
                 }
             }
         }
 
-        this.guessed = true;
+        if (this.colorGuess != 0 && this.regionGuess != 0) {
+            this.guessed = true;
+        }
     }
 
 
     @Override
     public Object processFrame(Mat frame, long captureTimeNanos) {
 
-        calls++;
+        numberCalls++;
+        this.colorGuess = 0;
+        this.regionGuess = 0;
 
         if (this.enabled) {
             guessProp(frame);
@@ -136,6 +158,10 @@ public class TeamPropDetector implements VisionProcessor {
         }
         if (this.region3Rect != null) {
             canvas.drawRect(makeGraphicsRect(this.region3Rect, scaleBmpPxToCanvasPx), rectPaint);
+        }
+
+        for (Rect rect : objectRects) {
+            canvas.drawRect(makeGraphicsRect(rect, scaleBmpPxToCanvasPx), rectPaint);
         }
     }
 
@@ -167,7 +193,15 @@ public class TeamPropDetector implements VisionProcessor {
         this.enabled = false;
     }
 
-    public int getNumberOfCalls() {
-        return this.calls;
+    public int getNumberCalls() {
+        return this.numberCalls;
+    }
+
+    public int getNumberGuesses() {
+        return this.numberGuesses;
+    }
+
+    public int getNumberFinds() {
+        return this.numberFinds;
     }
 }

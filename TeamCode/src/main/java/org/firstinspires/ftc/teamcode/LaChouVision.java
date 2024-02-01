@@ -66,6 +66,7 @@ public class LaChouVision extends LaChouBase {
     @Override
     public void loop() {
         telemetry.addData("State", state);
+        sleep(500); // Polite pause allowing for interrupts
         switch (state) {
 
             // Detect the location of the team prop
@@ -75,7 +76,9 @@ public class LaChouVision extends LaChouBase {
                     this.colorGuess = tpdProcessor.getColorGuess();
                     this.regionGuess = tpdProcessor.getRegionGuess();
                 }
-                telemetry.addData("Calls", tpdProcessor.getNumberOfCalls());
+                telemetry.addData("Number of Calls", tpdProcessor.getNumberCalls());
+                telemetry.addData("Number of Guesses", tpdProcessor.getNumberGuesses());
+                telemetry.addData("Number of Finds", tpdProcessor.getNumberFinds());
                 telemetry.addData("Color", this.colorGuess);
                 telemetry.addData("Region", this.regionGuess);
                 state = 0;
