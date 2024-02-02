@@ -11,7 +11,14 @@ public class STEMperFiConstants {
         HANG,
         INTAKE_PREP
     };
-    
+
+    public enum TeamPropColor {
+        BLUE,
+        RED,
+        UNKNOWN
+    }
+
+
     public static final double PLATE_INTAKE = 0.15;
     public static final double PLATE_FLAT = 0.21;
     public static final double PLATE_PINCH = 0.35;
