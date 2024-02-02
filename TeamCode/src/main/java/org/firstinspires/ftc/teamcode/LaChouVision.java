@@ -73,19 +73,22 @@ public class LaChouVision extends LaChouBase {
             // Detect the location of the team prop
             case 0:
                 telemetry.addLine("Guessing");
+                telemetry.addData("Number of Calls", tpdProcessor.getNumberCalls());
+                telemetry.addData("Number of Finds", tpdProcessor.getNumberFinds());
+                telemetry.addData("Number of Reds", tpdProcessor.getNumberReds());
+                telemetry.addData("Number of Blues", tpdProcessor.getNumberBlues());
+                telemetry.addData("Comment", tpdProcessor.getComment());
                 if (tpdProcessor.isGuessed()) {
                     this.colorGuess = tpdProcessor.getColorGuess();
                     this.regionGuess = tpdProcessor.getRegionGuess();
+                    tpdProcessor.disable();
                     state = 1;
                 }
-                telemetry.addData("Number of Calls", tpdProcessor.getNumberCalls());
-                telemetry.addData("Number of Guesses", tpdProcessor.getNumberGuesses());
-                telemetry.addData("Number of Finds", tpdProcessor.getNumberFinds());
-                tpdProcessor.disable();
                 break;
 
             // Push pre-loaded purple pixel to the proper Spike Mark (20 points)'
             case 1:
+                telemetry.addData("Comment", tpdProcessor.getComment());
                 if (this.colorGuess == TeamPropColor.BLUE) {
                     telemetry.addData("Color", "Blue");
                 } else if (this.colorGuess == TeamPropColor.RED) {
