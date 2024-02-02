@@ -10,6 +10,7 @@ import org.firstinspires.ftc.teamcode.processors.TeamPropDetector;
 import org.firstinspires.ftc.vision.VisionPortal;
 import org.firstinspires.ftc.vision.apriltag.AprilTagGameDatabase;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
+import org.firstinspires.ftc.teamcode.STEMperFiConstants.TeamPropColor;
 
 @Autonomous(name="LaChouVision", group="Robot")
 public class LaChouVision extends LaChouBase {
@@ -21,7 +22,7 @@ public class LaChouVision extends LaChouBase {
 
     int state;
     int regionGuess;
-    int colorGuess;
+    TeamPropColor colorGuess;
 
     @Override
     public void init() {
@@ -60,7 +61,7 @@ public class LaChouVision extends LaChouBase {
     @Override
     public void start() {
         state = 0;
-        colorGuess = 0;
+        colorGuess = TeamPropColor.UNKNOWN;
         regionGuess = 0;
     }
     @Override
@@ -72,22 +73,29 @@ public class LaChouVision extends LaChouBase {
             // Detect the location of the team prop
             case 0:
                 telemetry.addLine("Guessing");
-                while (!tpdProcessor.isGuessed()) {
+                if (tpdProcessor.isGuessed()) {
                     this.colorGuess = tpdProcessor.getColorGuess();
                     this.regionGuess = tpdProcessor.getRegionGuess();
+                    state = 1;
                 }
                 telemetry.addData("Number of Calls", tpdProcessor.getNumberCalls());
                 telemetry.addData("Number of Guesses", tpdProcessor.getNumberGuesses());
                 telemetry.addData("Number of Finds", tpdProcessor.getNumberFinds());
-                telemetry.addData("Color", this.colorGuess);
-                telemetry.addData("Region", this.regionGuess);
-                state = 0;
-                //tpdProcessor.disable();
+                tpdProcessor.disable();
                 break;
 
             // Push pre-loaded purple pixel to the proper Spike Mark (20 points)'
             case 1:
-                moveToSpikeMark(this.colorGuess, this.regionGuess);
+                if (this.colorGuess == TeamPropColor.BLUE) {
+                    telemetry.addData("Color", "Blue");
+                } else if (this.colorGuess == TeamPropColor.RED) {
+                    telemetry.addData("Color", "Red");
+                } else {
+                    telemetry.addData("Color", "Unknown");
+                }
+                telemetry.addData("Region", this.regionGuess);
+                state = 1;
+                //moveToSpikeMark(this.colorGuess, this.regionGuess);
                 break;
 
             // Move to the correct backdrop

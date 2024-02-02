@@ -5,6 +5,7 @@ import android.graphics.Color;
 import android.graphics.Paint;
 
 import org.firstinspires.ftc.robotcore.internal.camera.calibration.CameraCalibration;
+import org.firstinspires.ftc.teamcode.STEMperFiConstants.TeamPropColor;
 import org.firstinspires.ftc.vision.VisionProcessor;
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
@@ -17,13 +18,14 @@ import org.opencv.imgproc.Imgproc;
 import java.util.ArrayList;
 import java.util.List;
 
+
 class ContourInfo {
     MatOfPoint contour;
     double area;
-    int color; // 1 for blue, 2 for red
+    TeamPropColor color;
     int region; // 1, 2, or 3
 
-    ContourInfo(MatOfPoint contour, double area, int color, int region) {
+    ContourInfo(MatOfPoint contour, double area, TeamPropColor color, int region) {
         this.contour = contour;
         this.area = area;
         this.color = color;
@@ -38,7 +40,7 @@ public class TeamPropDetector implements VisionProcessor {
     int numberFinds = 0;
 
     // 0 = no guess, 1 = blue, 2 = red
-    int colorGuess = 0;
+    TeamPropColor colorGuess = TeamPropColor.UNKNOWN;
 
     // 0 = no guess, 1 = region 1, 2 = region 2, 3 = region 3
     int regionGuess = 0;
@@ -90,7 +92,7 @@ public class TeamPropDetector implements VisionProcessor {
 
         // Define color bounds of interest (the blue and red team props)
         Scalar[][] colorBounds = {
-                { new Scalar(90, 50, 50), new Scalar(100, 255, 255) },   // Blue
+                { new Scalar(90, 50, 50), new Scalar(130, 255, 255) },   // Blue
                 { new Scalar(0, 50, 50), new Scalar(10, 255, 255) },    // Red 1
                 { new Scalar(160, 50, 50), new Scalar(180, 255, 255) }  // Red 2
         };
@@ -132,7 +134,13 @@ public class TeamPropDetector implements VisionProcessor {
                     }
 
                     // Create and store the contour information
-                    foundContours.add(new ContourInfo(offsetContour, area, colorIndex + 1, regionIndex + 1));
+                    TeamPropColor teamPropColor = TeamPropColor.UNKNOWN;
+                    if (colorIndex == 0) {
+                        teamPropColor = TeamPropColor.BLUE;
+                    } else {
+                        teamPropColor = TeamPropColor.RED;
+                    }
+                    foundContours.add(new ContourInfo(offsetContour, area, teamPropColor, regionIndex + 1));
                 }
             }
         }
@@ -147,7 +155,7 @@ public class TeamPropDetector implements VisionProcessor {
             }
         }
 
-        if (this.colorGuess != 0 && this.regionGuess != 0) {
+        if (this.colorGuess != TeamPropColor.UNKNOWN && this.regionGuess != 0) {
             this.guessed = true;
         }
 
@@ -161,7 +169,7 @@ public class TeamPropDetector implements VisionProcessor {
         numberCalls++;
 
         // Reset data
-        this.colorGuess = 0;
+        this.colorGuess = TeamPropColor.UNKNOWN;
         this.regionGuess = 0;
         this.foundContours = new ArrayList<>();
         this.guessed = false;
@@ -210,7 +218,7 @@ public class TeamPropDetector implements VisionProcessor {
         bluePaint.setStrokeWidth(scaleCanvasDensity * 4);
 
         for (ContourInfo contourInfo: foundContours) {
-            if (contourInfo.color == 1) {
+            if (contourInfo.color == TeamPropColor.BLUE) {
                 canvas.drawRect(makeGraphicsRect(Imgproc.boundingRect(contourInfo.contour), scaleBmpPxToCanvasPx), bluePaint);
             } else {
                 canvas.drawRect(makeGraphicsRect(Imgproc.boundingRect(contourInfo.contour), scaleBmpPxToCanvasPx), redPaint);
@@ -231,7 +239,7 @@ public class TeamPropDetector implements VisionProcessor {
         return this.guessed;
     }
 
-    public int getColorGuess() {
+    public TeamPropColor getColorGuess() {
         return this.colorGuess;
     }
 
