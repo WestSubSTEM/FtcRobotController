@@ -20,6 +20,7 @@ import org.opencv.imgproc.Imgproc;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 
 class ContourInfo {
@@ -49,6 +50,9 @@ public class TeamPropDetector implements VisionProcessor {
 
     boolean enabled = true;
 
+    // Set to false if the detector is not ready to process new frames
+    boolean ready = true;
+
     Rect region1Rect;
     Rect region2Rect;
     Rect region3Rect;
@@ -57,11 +61,13 @@ public class TeamPropDetector implements VisionProcessor {
     int regionHeight;
     int regionStartHeight;
 
-    List<ContourInfo> foundContours;
+//    List<ContourInfo> foundContours;
+    CopyOnWriteArrayList<ContourInfo> foundContours;
 
     @Override
     public void init(int width, int height, CameraCalibration calibration) {
         Log.d(TAG, "Initializing TeamPropDetector");
+        this.reset();
     }
 
     private MatOfPoint findLargestContour(Mat image, Scalar lowerBound, Scalar upperBound) {
@@ -83,23 +89,20 @@ public class TeamPropDetector implements VisionProcessor {
             }
         }
 
+        mask = null;
+        contours = null;
+        hierarchy = null;
+
         return largestContour;
     }
 
-    public Mat guessProp(Mat image) {
+    public void guessProp(Mat image) {
 
         // Convert the image to HSV
         Mat hsvImage = new Mat();
         Imgproc.cvtColor(image, hsvImage, Imgproc.COLOR_RGB2HSV);
 
         // Define color bounds of interest (the blue and red team props)
-        /*
-        Scalar[][] colorBounds = {
-                {new Scalar(90, 50, 50), new Scalar(130, 255, 255)},   // Blue
-                {new Scalar(0, 50, 50), new Scalar(10, 255, 255)},    // Red 1
-                {new Scalar(160, 50, 50), new Scalar(180, 255, 255)}  // Red 2
-        };
-        */
         Scalar[][] colorBounds = {
                 {new Scalar(90, 50, 50), new Scalar(130, 255, 255)},   // Blue
                 {new Scalar(0, 50, 50), new Scalar(10, 255, 255)},    // Red 1
@@ -162,30 +165,30 @@ public class TeamPropDetector implements VisionProcessor {
             this.guessed = true;
         }
 
-        return hsvImage;
+        hsvImage = null;
     }
 
     public void reset() {
 //        Log.d(TAG, "Resetting TeamPropDetector");
         this.colorGuess = TeamPropColor.UNKNOWN;
         this.regionGuess = 0;
-        this.foundContours = new ArrayList<>();
+//        this.foundContours = new ArrayList<>();
+        this.foundContours = new CopyOnWriteArrayList<>();
         this.guessed = false;
     }
 
     @Override
     public Object processFrame(Mat frame, long captureTimeNanos) {
 
-        Mat hsvImage = frame;
-
-        if (this.enabled) {
+        if (this.enabled && this.ready) {
+            // Set to block to prevent clobbering internal data, esp. while drawing
+            this.ready = false;
             // Reset data
             this.reset();
-
-            hsvImage = guessProp(frame);
+            guessProp(frame);
         }
 
-        return hsvImage;
+        return null;
     }
 
     @Override
@@ -237,6 +240,8 @@ public class TeamPropDetector implements VisionProcessor {
                 canvas.drawRect(makeGraphicsRect(boundingRect, scaleBmpPxToCanvasPx), rectPaint);
             }
         }
+
+        this.ready = true;
     }
 
     private android.graphics.Rect makeGraphicsRect(Rect rect, float scaleBmpPxToCanvasPx) {
