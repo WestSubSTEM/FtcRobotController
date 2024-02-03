@@ -18,7 +18,7 @@ public class LaChouVision extends LaChouBase {
     private ColorSensor colorSensor;
     private VisionPortal visionPortal;
     private AprilTagProcessor aprilTagProcessor;
-    private TeamPropDetector tpdProcessor;
+    private TeamPropDetector tpDetector;
 
     int state;
     int regionGuess;
@@ -45,14 +45,14 @@ public class LaChouVision extends LaChouBase {
 
         // TeamPropDetector processor
         telemetry.addLine("Initializing TeamPropDetector processor");
-        tpdProcessor = new TeamPropDetector();
+        tpDetector = new TeamPropDetector();
 
         // Vision Portal
         // Vision Portal
         telemetry.addLine("Initializing vision portal");
         VisionPortal.Builder vpBuilder = new VisionPortal.Builder();
         vpBuilder.setCamera(hardwareMap.get(WebcamName.class, "Webcam 1"));
-        vpBuilder.addProcessor(tpdProcessor);
+        vpBuilder.addProcessor(tpDetector);
         vpBuilder.setCameraResolution(new Size(640, 480));
         visionPortal = vpBuilder.build();
 
@@ -63,6 +63,7 @@ public class LaChouVision extends LaChouBase {
         state = 0;
         colorGuess = TeamPropColor.UNKNOWN;
         regionGuess = 0;
+        tpDetector.reset();
     }
     @Override
     public void loop() {
@@ -72,15 +73,10 @@ public class LaChouVision extends LaChouBase {
             // Detect the location of the team prop
             case 0:
                 telemetry.addLine("Guessing");
-                telemetry.addData("Number of Calls", tpdProcessor.getNumberCalls());
-                telemetry.addData("Number of Finds", tpdProcessor.getNumberFinds());
-                telemetry.addData("Number of Reds", tpdProcessor.getNumberReds());
-                telemetry.addData("Number of Blues", tpdProcessor.getNumberBlues());
-                telemetry.addData("Comment", tpdProcessor.getComment());
-                if (tpdProcessor.isGuessed()) {
-                    this.colorGuess = tpdProcessor.getColorGuess();
-                    this.regionGuess = tpdProcessor.getRegionGuess();
-                    tpdProcessor.disable();
+                if (tpDetector.isGuessed()) {
+                    this.colorGuess = tpDetector.getColorGuess();
+                    this.regionGuess = tpDetector.getRegionGuess();
+                    tpDetector.disable();
                     state = 1;
                 }
                 sleep(200); // Polite pause allowing for interrupts
@@ -88,7 +84,7 @@ public class LaChouVision extends LaChouBase {
 
             // Push pre-loaded purple pixel to the proper Spike Mark (20 points)'
             case 1:
-                telemetry.addData("Comment", tpdProcessor.getComment());
+                telemetry.addLine("Moving to spike mark");
                 if (this.colorGuess == TeamPropColor.BLUE) {
                     telemetry.addData("Color", "Blue");
                 } else if (this.colorGuess == TeamPropColor.RED) {

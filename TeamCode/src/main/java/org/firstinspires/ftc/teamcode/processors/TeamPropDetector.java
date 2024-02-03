@@ -5,6 +5,7 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.RectF;
+import android.util.Log;
 
 import org.firstinspires.ftc.robotcore.internal.camera.calibration.CameraCalibration;
 import org.firstinspires.ftc.teamcode.STEMperFiConstants.TeamPropColor;
@@ -37,11 +38,8 @@ class ContourInfo {
 
 public class TeamPropDetector implements VisionProcessor {
 
-    int numberCalls = 0;
+    private static final String TAG = "TeamPropDetector";
 
-    String comment;
-
-    // 0 = no guess, 1 = blue, 2 = red
     TeamPropColor colorGuess = TeamPropColor.UNKNOWN;
 
     // 0 = no guess, 1 = region 1, 2 = region 2, 3 = region 3
@@ -63,7 +61,7 @@ public class TeamPropDetector implements VisionProcessor {
 
     @Override
     public void init(int width, int height, CameraCalibration calibration) {
-
+        Log.d(TAG, "Initializing TeamPropDetector");
     }
 
     private MatOfPoint findLargestContour(Mat image, Scalar lowerBound, Scalar upperBound) {
@@ -158,31 +156,31 @@ public class TeamPropDetector implements VisionProcessor {
         }
 
         if (largestContourInfo != null) {
+            Log.d(TAG, "Largest contour: area " + largestContourInfo.area + " | color " + largestContourInfo.color + " region " + largestContourInfo.region);
             this.colorGuess = largestContourInfo.color;
             this.regionGuess = largestContourInfo.region;
             this.guessed = true;
-        } else {
-            this.comment = "No props found";
         }
 
         return hsvImage;
     }
 
+    public void reset() {
+//        Log.d(TAG, "Resetting TeamPropDetector");
+        this.colorGuess = TeamPropColor.UNKNOWN;
+        this.regionGuess = 0;
+        this.foundContours = new ArrayList<>();
+        this.guessed = false;
+    }
 
     @Override
     public Object processFrame(Mat frame, long captureTimeNanos) {
-
-        numberCalls++;
 
         Mat hsvImage = frame;
 
         if (this.enabled) {
             // Reset data
-            this.comment = "";
-            this.colorGuess = TeamPropColor.UNKNOWN;
-            this.regionGuess = 0;
-            this.foundContours = new ArrayList<>();
-            this.guessed = false;
+            this.reset();
 
             hsvImage = guessProp(frame);
         }
@@ -263,54 +261,13 @@ public class TeamPropDetector implements VisionProcessor {
     }
 
     public void enable() {
+        Log.d(TAG, "Enabling TeamPropDetector");
         this.enabled = true;
     }
 
     public void disable() {
+        Log.d(TAG, "Disabling TeamPropDetector");
         this.enabled = false;
     }
 
-    public int getNumberCalls() {
-        return this.numberCalls;
-    }
-
-    public int getNumberFinds() {
-        if (this.foundContours == null) {
-            return 0;
-        } else {
-            return this.foundContours.size();
-        }
-    }
-
-    public int getNumberReds() {
-        if (this.foundContours == null) {
-            return 0;
-        } else {
-            int count = 0;
-            for (ContourInfo contourInfo : foundContours) {
-                if (contourInfo.color == TeamPropColor.RED) {
-                    count++;
-                }
-            }
-            return count;
-        }
-    }
-
-    public int getNumberBlues() {
-        if (this.foundContours == null) {
-            return 0;
-        } else {
-            int count = 0;
-            for (ContourInfo contourInfo : foundContours) {
-                if (contourInfo.color == TeamPropColor.BLUE) {
-                    count++;
-                }
-            }
-            return count;
-        }
-    }
-
-    public String getComment() {
-        return this.comment;
-    }
 }
