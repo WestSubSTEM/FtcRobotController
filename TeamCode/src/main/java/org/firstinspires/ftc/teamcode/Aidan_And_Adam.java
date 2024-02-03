@@ -70,8 +70,13 @@ public class Aidan_And_Adam extends LinearOpMode {
         servoPixelRotate.setPosition(pixelRotatePosition);
         servoPixelFlip = hardwareMap.get(Servo.class, "flip");
         servoPixelFlip.setPosition(pixelFlipPosition);
-
-
+        servoPixelLeft = hardwareMap.get(Servo.class, "left");
+        servoPixelLeft.setPosition(STEMperFiConstants.PINCH_OPEN);
+        servoPixelRight = hardwareMap.get(Servo.class, "right");
+        servoPixelRight.setPosition(STEMperFiConstants.PINCH_OPEN);
+        sleep(3000);
+        servoPixelLeft.setPosition(STEMperFiConstants.PINCH_CLOSED);
+        servoPixelRight.setPosition(STEMperFiConstants.PINCH_CLOSED_WALL);
         // the extended gamepad object
 
         liftOp = new GamepadEx(gamepad2);
@@ -80,6 +85,9 @@ public class Aidan_And_Adam extends LinearOpMode {
         buttonRed = new ButtonReader(liftOp, GamepadKeys.Button.B);
         buttonBlue = new ButtonReader(liftOp, GamepadKeys.Button.A);
         buttonPink = new ToggleButtonReader(liftOp, GamepadKeys.Button.X);
+
+
+
 
 //        Motor in_e = new Motor(hardwareMap, "drive_in_e", Motor.GoBILDA.RPM_312);
 //        Motor in_c = new Motor(hardwareMap, "drive_in_c", Motor.GoBILDA.RPM_312);
@@ -126,6 +134,57 @@ public class Aidan_And_Adam extends LinearOpMode {
 
 
     }
+    public void score(int pos)
+    {
+
+        //Robot Gets Aligned With The Backdrop
+        mecanumDrive.driveRobotCentric(0, 0, .3, false);
+        do {
+            odometry.updatePose();
+            telemetry.addData("x", odometry.getPose().getX());
+            telemetry.addData("y", odometry.getPose().getY());
+            telemetry.update();
+        } while (odometry.getPose().getRotation().getDegrees() < 90);
+        mecanumDrive.driveRobotCentric(0, 0, 0, false);
+
+
+        //Robot Sets The Arm To Scoring Position
+        motorLift.setTargetPosition(STEMperFiConstants.LIFT_TARGET_FLIP);
+        sleep(2000);
+        servoPixelFlip.setPosition(STEMperFiConstants.PINCH_FLIP_BACKDROP);
+        sleep(2000);
+        servoPixelRotate.setPosition(STEMperFiConstants.PINCH_ROTATE_VERTICAL);
+
+        //Robot Moves Forward To Score
+        mecanumDrive.driveRobotCentric(0, .3, 0, false);
+        do {
+            odometry.updatePose();
+            telemetry.addData("x", odometry.getPose().getX());
+            telemetry.addData("y", odometry.getPose().getY());
+            telemetry.update();
+        } while (odometry.getPose().getY() > pos);
+        mecanumDrive.driveRobotCentric(0, 0, 0, false);
+        sleep(500);
+
+        //Robot Scores
+        servoPixelLeft.setPosition(STEMperFiConstants.PINCH_OPEN);
+        sleep(10);
+        servoPixelRight.setPosition(STEMperFiConstants.PINCH_OPEN);
+        sleep(1000);
+
+        //Robot Backs Up
+        mecanumDrive.driveRobotCentric(0, -.3, 0, false);
+        do {
+            odometry.updatePose();
+            telemetry.addData("x", odometry.getPose().getX());
+            telemetry.addData("y", odometry.getPose().getY());
+            telemetry.update();
+        } while (odometry.getPose().getY() < -80);
+        mecanumDrive.driveRobotCentric(0, 0, 0, false);
+        sleep(1000);
+        motorLift.setTargetPosition(0);
+        sleep(1000);
+    }
 
     /**
      * Override this method and place your code here.
@@ -146,6 +205,9 @@ public class Aidan_And_Adam extends LinearOpMode {
 
 
         if (opModeIsActive()) {
+            mecanumDrive.driveRobotCentric(0, 0, .3, false);
+            sleep(30000);
+            //Robot Drives Forward To Place The Pixel
             mecanumDrive.driveRobotCentric(0, .2, 0, false);
             do {
                 odometry.updatePose();
@@ -153,20 +215,127 @@ public class Aidan_And_Adam extends LinearOpMode {
                 telemetry.addData("y", odometry.getPose().getY());
                 telemetry.update();
             } while (odometry.getPose().getX() > -31);
+
+            //Robot Stops And Waits
             mecanumDrive.driveRobotCentric(0, 0, 0, false);
-            sleep(2_000);
+            sleep(500);
+
+            //Robot Turns To Make Sure The Pixel Is In Place
+            mecanumDrive.driveRobotCentric(0, 0, .3, false);
+            do {
+                odometry.updatePose();
+                telemetry.addData("x", odometry.getPose().getX());
+                telemetry.addData("y", odometry.getPose().getY());
+                telemetry.update();
+            } while (odometry.getPose().getRotation().getDegrees() < 0);
+
+            //Robot Stops And Lowers The Arm
+            mecanumDrive.driveRobotCentric(0, 0, 0, false);
+            motorLift.setTargetPosition(0);
+
+            //Robot Reverses
+
             mecanumDrive.driveRobotCentric(0, -0.2, 0, false);
             do {
                 odometry.updatePose();
                 telemetry.addData("x", odometry.getPose().getX());
                 telemetry.addData("y", odometry.getPose().getY());
                 telemetry.update();
-            } while (odometry.getPose().getX() < -21);
+            } while (odometry.getPose().getX() < -4);
+
+            //Robot Stops And Waits
+            mecanumDrive.driveRobotCentric(0, 0, 0, false);
+            motorLift.setTargetPosition(0);
+            sleep(2_000);
+
+            mecanumDrive.driveRobotCentric(0, 0, .3, false);
+            do {
+                odometry.updatePose();
+                telemetry.addData("x", odometry.getPose().getX());
+                telemetry.addData("y", odometry.getPose().getY());
+                telemetry.update();
+            } while (odometry.getPose().getRotation().getDegrees() < 90);
+            mecanumDrive.driveRobotCentric(0, 0, 0, false);
+            motorLift.setTargetPosition(0);
+            motorLift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            //moveForwardTicks(-1_000, .2);
+            mecanumDrive.driveRobotCentric(0, .4, 0, false);
+            do {
+                odometry.updatePose();
+                telemetry.addData("x", odometry.getPose().getX());
+                telemetry.addData("y", odometry.getPose().getY());
+                telemetry.update();
+            } while (odometry.getPose().getY() > -64);
+            mecanumDrive.driveRobotCentric(0, 0, 0, false);
+            sleep(1_000);
+            mecanumDrive.driveRobotCentric(0, 0, -.3, false);
+            do {
+                odometry.updatePose();
+                telemetry.addData("x", odometry.getPose().getX());
+                telemetry.addData("y", odometry.getPose().getY());
+                telemetry.addData("Angle", odometry.getPose().getRotation().getDegrees());
+                telemetry.update();
+            } while (odometry.getPose().getRotation().getDegrees() > 0);
+            mecanumDrive.driveRobotCentric(0, 0, 0, false);
+            mecanumDrive.driveRobotCentric(0, .4, 0, false);
+            do {
+                odometry.updatePose();
+                telemetry.addData("x", odometry.getPose().getX());
+                telemetry.addData("y", odometry.getPose().getY());
+                telemetry.update();
+            } while (odometry.getPose().getX() > -24);
+            mecanumDrive.driveRobotCentric(0, 0, 0, false);
+            //Turn To Align With Backboard
+            mecanumDrive.driveRobotCentric(0, 0, .3, false);
+            do {
+                odometry.updatePose();
+                telemetry.addData("x", odometry.getPose().getX());
+                telemetry.addData("y", odometry.getPose().getY());
+                telemetry.addData("y", odometry.getPose().getY());
+                telemetry.update();
+            } while (odometry.getPose().getRotation().getDegrees() > 90);
+            mecanumDrive.driveRobotCentric(0, 0, 0, false);
+            score(-84);
+            /*//Robot Reverses
+
+            mecanumDrive.driveRobotCentric(0, -0.2, 0, false);
+            do {
+                odometry.updatePose();
+                telemetry.addData("x", odometry.getPose().getX());
+                telemetry.addData("y", odometry.getPose().getY());
+                telemetry.update();
+            } while (odometry.getPose().getX() < -29);
+
+            //Robot Stops And Waits
+            mecanumDrive.driveRobotCentric(0, 0, 0, false);
+            motorLift.setTargetPosition(0);
+            sleep(2_000);*/
+            /*  Blue Through
+            mecanumDrive.driveRobotCentric(0, 0, .3, false);
+            do {
+                odometry.updatePose();
+                telemetry.addData("x", odometry.getPose().getX());
+                telemetry.addData("y", odometry.getPose().getY());
+                telemetry.update();
+            } while (odometry.getPose().getRotation().getDegrees() < 90);
             mecanumDrive.driveRobotCentric(0, 0, 0, false);
             motorLift.setTargetPosition(0);
             //moveForwardTicks(2_000, .2);
             sleep(2_000);
+            motorLift.setTargetPosition(STEMperFiConstants.LIFT_TARGET_PINCH);
+            motorLift.setPower(.4);
+            motorLift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
             //moveForwardTicks(-1_000, .2);
+            mecanumDrive.driveRobotCentric(0, .4, 0, false);
+            do {
+                odometry.updatePose();
+                telemetry.addData("x", odometry.getPose().getX());
+                telemetry.addData("y", odometry.getPose().getY());
+                telemetry.update();
+            } while (odometry.getPose().getY() > -72);
+            mecanumDrive.driveRobotCentric(0, 0, 0, false);
+            sleep(1_000);*/
+            //score();
         }
     }
 }
