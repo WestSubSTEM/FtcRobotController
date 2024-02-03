@@ -67,7 +67,6 @@ public class LaChouVision extends LaChouBase {
     @Override
     public void loop() {
         telemetry.addData("State", state);
-        sleep(500); // Polite pause allowing for interrupts
         switch (state) {
 
             // Detect the location of the team prop
@@ -84,6 +83,7 @@ public class LaChouVision extends LaChouBase {
                     tpdProcessor.disable();
                     state = 1;
                 }
+                sleep(200); // Polite pause allowing for interrupts
                 break;
 
             // Push pre-loaded purple pixel to the proper Spike Mark (20 points)'
@@ -98,6 +98,7 @@ public class LaChouVision extends LaChouBase {
                 }
                 telemetry.addData("Region", this.regionGuess);
                 state = 1;
+                sleep(500); // Polite pause allowing for interrupts
                 //moveToSpikeMark(this.colorGuess, this.regionGuess);
                 break;
 
