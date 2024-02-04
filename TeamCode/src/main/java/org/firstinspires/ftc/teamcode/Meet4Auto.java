@@ -157,11 +157,18 @@ public class Meet4Auto extends OpMode {
 
                 telemetry.addData("Color Guess", this.colorGuess);
                 telemetry.addData("Region Guess", this.regionGuess);
-                telemetry.addLine("Moving to spike mark");
+                telemetry.addLine("Moving to spike mark then backstage");
+                // Move to the spike mark and then the backstage
                 moveToSpikeMark(this.regionGuess);
                 state = 2;
                 break;
+                
+            case 2:
+                
+                telemetry.addLine("Score");
+                // TODO Move to the back stage
 
+                break;
             default:
                 telemetry.addLine("Unknown state");
         }
