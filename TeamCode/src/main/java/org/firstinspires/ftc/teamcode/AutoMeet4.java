@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
+import android.util.Size;
+
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -9,6 +11,12 @@ import com.qualcomm.robotcore.hardware.LED;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.TouchSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
+
+import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
+import org.firstinspires.ftc.teamcode.processors.TeamPropDetector;
+import org.firstinspires.ftc.vision.VisionPortal;
+import org.firstinspires.ftc.vision.apriltag.AprilTagGameDatabase;
+import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 
 import edu.spa.ftclib.internal.drivetrain.MecanumDrivetrain;
 import edu.spa.ftclib.internal.state.Button;
@@ -65,6 +73,14 @@ public class AutoMeet4 extends LinearOpMode {
     public boolean isBlue = true;
     public int wait = 0;
 
+    private VisionPortal visionPortal;
+    private AprilTagProcessor aprilTagProcessor;
+    private TeamPropDetector tpDetector;
+    int state;
+    int regionGuess;
+    StemperFiConstants.TeamPropColor colorGuess;
+
+
     @Override
     public void runOpMode() throws InterruptedException {
         initRobot();
@@ -90,7 +106,7 @@ public class AutoMeet4 extends LinearOpMode {
             int slideTime = 1600;
             double powSlide = .4;
 
-//SCORING BOTTOM OF HUB AUTO
+            //SCORING BOTTOM OF HUB AUTO
             /*
             slideLeftTime(slideTime,powSlide);
             moveBackwardsMM(MM_TO_TOWER_BOTTOM, .4);
@@ -184,7 +200,7 @@ public class AutoMeet4 extends LinearOpMode {
             //sleep(4000);
             turnRight( 90, .5);
             slideLeftTime(1600, .6);
-    sleep(1000);
+            sleep(1000);
 
 
             //Moves the robot towards the depot
@@ -391,6 +407,29 @@ public class AutoMeet4 extends LinearOpMode {
 
         zeroTouchSensor = hardwareMap.get(TouchSensor.class, "zero");
         zeroLED = hardwareMap.get(LED.class, "zeroLed");
+
+        telemetry.addLine("Initializing AprilTagProcessor");
+        aprilTagProcessor = new AprilTagProcessor.Builder()
+                .setTagLibrary(AprilTagGameDatabase.getCurrentGameTagLibrary())
+                .setDrawTagID(true)
+                .setDrawTagOutline(true)
+                .setDrawAxes(true)
+                .setDrawCubeProjection(true)
+                .build();
+
+        telemetry.addLine("Initializing TeamPropDetector");
+        tpDetector = new TeamPropDetector();
+
+        telemetry.addLine("Initializing VisionPortal");
+        VisionPortal.Builder vpBuilder = new VisionPortal.Builder();
+        vpBuilder.setCamera(hardwareMap.get(WebcamName.class, "Webcam 1"));
+        vpBuilder.addProcessor(tpDetector);
+        vpBuilder.setCameraResolution(new Size(640, 480));
+        visionPortal = vpBuilder.build();
+
+
+
+
 
         do {
             greenButton.input(gamepad2.a);
