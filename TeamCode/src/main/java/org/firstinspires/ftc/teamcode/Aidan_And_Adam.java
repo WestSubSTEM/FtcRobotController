@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
+import android.util.Size;
+
 import com.arcrobotics.ftclib.drivebase.MecanumDrive;
 import com.arcrobotics.ftclib.gamepad.ButtonReader;
 import com.arcrobotics.ftclib.gamepad.GamepadEx;
@@ -15,6 +17,7 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 
+import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.teamcode.processors.TeamPropDetector;
 import org.firstinspires.ftc.vision.VisionPortal;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
@@ -43,13 +46,13 @@ public class Aidan_And_Adam extends LinearOpMode {
 
     // Vision
 
-    private VisionPortal visionPortal;
-    private AprilTagProcessor aprilTagProcessor;
-    private TeamPropDetector tpdProcessor;
+    VisionPortal visionPortal;
+    AprilTagProcessor aprilTagProcessor;
+    TeamPropDetector tpDetector;
 
     int state;
     int regionGuess;
-    int colorGuess;
+    STEMperFiConstants.TeamPropColor colorGuess;
 
 
     /*
@@ -132,6 +135,33 @@ public class Aidan_And_Adam extends LinearOpMode {
                 TRACKWIDTH, CENTER_WHEEL_OFFSET
         );
 
+        // TeamPropDetector processor
+        telemetry.addLine("Initializing TeamPropDetector processor");
+        tpDetector = new TeamPropDetector();
+
+        // Vision Portal
+        telemetry.addLine("Initializing vision portal");
+        telemetry.addLine("Initializing vision portal");
+        VisionPortal.Builder vpBuilder = new VisionPortal.Builder();
+        vpBuilder.setCamera(hardwareMap.get(WebcamName.class, "Webcam 1"));
+        vpBuilder.addProcessor(tpDetector);
+        vpBuilder.setCameraResolution(new Size(640, 480));
+        visionPortal = vpBuilder.build();
+
+        // Wait for the team prop detector to guess the color
+        while (!tpDetector.isGuessed()) {
+            sleep(100);
+        }
+        tpDetector.disable();
+
+        this.colorGuess = tpDetector.getColorGuess();
+        this.regionGuess = tpDetector.getRegionGuess();
+
+        telemetry.addData("Color Guess", this.colorGuess);
+        telemetry.addData("Region Guess", this.regionGuess);
+        telemetry.update();
+
+
 
     }
     public void score(int pos)
@@ -205,6 +235,8 @@ public class Aidan_And_Adam extends LinearOpMode {
 
 
         if (opModeIsActive()) {
+
+
             mecanumDrive.driveRobotCentric(0, 0, .3, false);
             sleep(30000);
             //Robot Drives Forward To Place The Pixel
