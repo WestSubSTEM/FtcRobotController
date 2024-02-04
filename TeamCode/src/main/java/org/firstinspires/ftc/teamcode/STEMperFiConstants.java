@@ -23,6 +23,12 @@ public class STEMperFiConstants {
         HANG,
         INTAKE_PREP
     };
+
+    public enum TeamPropColor {
+        BLUE,
+        RED,
+        UNKNOWN
+    }
     
     public static final double DRONE_CLOSE = .44;
     public static final double DRONE_LAUNCH = .7;
