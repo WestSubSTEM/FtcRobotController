@@ -3,12 +3,10 @@ package org.firstinspires.ftc.teamcode.processors;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
-import android.graphics.Path;
-import android.graphics.RectF;
 import android.util.Log;
 
 import org.firstinspires.ftc.robotcore.internal.camera.calibration.CameraCalibration;
-import org.firstinspires.ftc.teamcode.STEMperFiConstants.TeamPropColor;
+import org.firstinspires.ftc.teamcode.StemperFiConstants.TeamPropColor;
 import org.firstinspires.ftc.vision.VisionProcessor;
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
