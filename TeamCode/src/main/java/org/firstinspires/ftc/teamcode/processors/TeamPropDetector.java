@@ -1,27 +1,47 @@
 package org.firstinspires.ftc.teamcode.processors;
 
 import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.Path;
+import android.graphics.RectF;
+import android.util.Log;
 
 import org.firstinspires.ftc.robotcore.internal.camera.calibration.CameraCalibration;
+import org.firstinspires.ftc.teamcode.STEMperFiConstants.TeamPropColor;
 import org.firstinspires.ftc.vision.VisionProcessor;
 import org.opencv.core.Core;
+import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
+import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
+
+
+class ContourInfo {
+    MatOfPoint contour;
+    double area;
+    TeamPropColor color;
+    int region; // 1, 2, or 3
+
+    ContourInfo(MatOfPoint contour, double area, TeamPropColor color, int region) {
+        this.contour = contour;
+        this.area = area;
+        this.color = color;
+        this.region = region;
+    }
+}
 
 public class TeamPropDetector implements VisionProcessor {
 
-    int calls = 0;
+    private static final String TAG = "TeamPropDetector";
 
-    List<MatOfPoint> contours = new ArrayList<>();
-    List<MatOfPoint> pixels = new ArrayList<>();
-
-    // 0 = no guess, 1 = blue, 2 = red
-    int colorGuess = 0;
+    TeamPropColor colorGuess = TeamPropColor.UNKNOWN;
 
     // 0 = no guess, 1 = region 1, 2 = region 2, 3 = region 3
     int regionGuess = 0;
@@ -30,14 +50,27 @@ public class TeamPropDetector implements VisionProcessor {
 
     boolean enabled = true;
 
-    double largestAreaFound = 0.0;
+    // Set to false if the detector is not ready to process new frames
+    boolean ready = true;
+
+    Rect region1Rect;
+    Rect region2Rect;
+    Rect region3Rect;
+
+    int regionWidth;
+    int regionHeight;
+    int regionStartHeight;
+
+//    List<ContourInfo> foundContours;
+    CopyOnWriteArrayList<ContourInfo> foundContours;
 
     @Override
     public void init(int width, int height, CameraCalibration calibration) {
-
+        Log.d(TAG, "Initializing TeamPropDetector");
+        this.reset();
     }
 
-    private double findLargestContour(Mat image, Scalar lowerBound, Scalar upperBound) {
+    private MatOfPoint findLargestContour(Mat image, Scalar lowerBound, Scalar upperBound) {
         Mat mask = new Mat();
         Core.inRange(image, lowerBound, upperBound, mask);
 
@@ -45,74 +78,117 @@ public class TeamPropDetector implements VisionProcessor {
         Mat hierarchy = new Mat();
         Imgproc.findContours(mask, contours, hierarchy, Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_SIMPLE);
 
-        double largestArea = 0.0;
+        double largestArea = 0;
+        MatOfPoint largestContour = null;
 
         for (MatOfPoint contour : contours) {
             double area = Imgproc.contourArea(contour);
             if (area > largestArea) {
                 largestArea = area;
+                largestContour = contour; // Keep track of the largest contour
             }
         }
 
-        return largestArea;
+        mask = null;
+        contours = null;
+        hierarchy = null;
+
+        return largestContour;
     }
 
-    private void guessProp(Mat image) {
+    public void guessProp(Mat image) {
+
+        // Convert the image to HSV
         Mat hsvImage = new Mat();
-        Imgproc.cvtColor(image, hsvImage, Imgproc.COLOR_BGR2HSV);
+        Imgproc.cvtColor(image, hsvImage, Imgproc.COLOR_RGB2HSV);
 
-        int height = hsvImage.rows();
-        int width = hsvImage.cols();
+        // Define color bounds of interest (the blue and red team props)
+        Scalar[][] colorBounds = {
+                {new Scalar(90, 50, 50), new Scalar(130, 255, 255)},   // Blue
+                {new Scalar(0, 50, 50), new Scalar(10, 255, 255)},    // Red 1
+                {new Scalar(160, 50, 50), new Scalar(180, 255, 255)}  // Red 2
+        };
 
+        // Define the regions of interest
+        int imageHeight = hsvImage.rows();
+        int imageWidth = hsvImage.cols();
+
+        regionHeight = imageHeight / 3;
+        regionWidth = imageWidth / 3;
+        regionStartHeight = regionHeight * 2;
+
+        region1Rect = new Rect(0, regionStartHeight, regionWidth, regionHeight);
+        region2Rect = new Rect(imageWidth / 3, regionStartHeight, regionWidth, regionHeight);
+        region3Rect = new Rect(imageWidth / 3 * 2, regionStartHeight, regionWidth, regionHeight);
+
+        // Create the regions of interest
         List<Mat> regions = new ArrayList<>();
-        regions.add(hsvImage.submat(height / 3 * 2, height, 0, width / 3));
-        regions.add(hsvImage.submat(height / 3 * 2, height, width / 3, (width / 3) * 2));
-        regions.add(hsvImage.submat(height / 3 * 2, height, (width / 3) * 2, width));
+        regions.add(hsvImage.submat(regionStartHeight, imageHeight, region1Rect.x, region1Rect.x + region1Rect.width));
+        regions.add(hsvImage.submat(regionStartHeight, imageHeight, region2Rect.x, region2Rect.x + region2Rect.width));
+        regions.add(hsvImage.submat(regionStartHeight, imageHeight, region3Rect.x, region3Rect.x + region3Rect.width));
 
-        Scalar[] colorBoundsLower = {
-                new Scalar(90, 50, 50),   // Blue
-                new Scalar(0, 50, 50),    // Red 1
-                new Scalar(160, 50, 50)  // Red 2
-        };
-
-        Scalar[] colorBoundsUpper = {
-                new Scalar(130, 50, 50),   // Blue
-                new Scalar(10, 50, 50),    // Red 1
-                new Scalar(180, 50, 50)  // Red 2
-        };
-
-        double largestArea = 0;
-
+        // Find the largest contour in each region
         for (int regionIndex = 0; regionIndex < regions.size(); regionIndex++) {
-            for (int colorIndex = 0; colorIndex < colorBoundsLower.length; colorIndex++) {
-                double area = findLargestContour(regions.get(regionIndex), colorBoundsLower[colorIndex], colorBoundsUpper[colorIndex]);
-                if (area > largestArea) {
-                    largestArea = area;
+            for (int colorIndex = 0; colorIndex < colorBounds.length; colorIndex++) {
+                MatOfPoint largestContour = findLargestContour(regions.get(regionIndex), colorBounds[colorIndex][0], colorBounds[colorIndex][1]);
+                if (largestContour != null) {
+
+                    // Create and store the contour information
+                    TeamPropColor teamPropColor = TeamPropColor.UNKNOWN;
                     if (colorIndex == 0) {
-                        this.colorGuess = 1;
+                        teamPropColor = TeamPropColor.BLUE;
                     } else {
-                        this.colorGuess = 2;
+                        teamPropColor = TeamPropColor.RED;
                     }
-                    this.regionGuess = regionIndex + 1;
+                    foundContours.add(
+                            new ContourInfo(
+                                    largestContour,
+                                    Imgproc.contourArea(largestContour),
+                                    teamPropColor,
+                                    regionIndex + 1));
                 }
             }
         }
 
-        this.largestAreaFound = largestArea;
-        this.guessed = true;
+        // Find the largest contour of all the found contours
+        ContourInfo largestContourInfo = null;
+        for (ContourInfo contourInfo : foundContours) {
+            if (largestContourInfo == null || contourInfo.area > largestContourInfo.area) {
+                largestContourInfo = contourInfo;
+            }
+        }
+
+        if (largestContourInfo != null) {
+            Log.d(TAG, "Largest contour: area " + largestContourInfo.area + " | color " + largestContourInfo.color + " region " + largestContourInfo.region);
+            this.colorGuess = largestContourInfo.color;
+            this.regionGuess = largestContourInfo.region;
+            this.guessed = true;
+        }
+
+        hsvImage = null;
     }
 
+    public void reset() {
+//        Log.d(TAG, "Resetting TeamPropDetector");
+        this.colorGuess = TeamPropColor.UNKNOWN;
+        this.regionGuess = 0;
+//        this.foundContours = new ArrayList<>();
+        this.foundContours = new CopyOnWriteArrayList<>();
+        this.guessed = false;
+    }
 
     @Override
     public Object processFrame(Mat frame, long captureTimeNanos) {
 
-        calls++;
-
-        if (this.enabled) {
+        if (this.enabled && this.ready) {
+            // Set to block to prevent clobbering internal data, esp. while drawing
+            this.ready = false;
+            // Reset data
+            this.reset();
             guessProp(frame);
         }
 
-        return frame;
+        return null;
     }
 
     @Override
@@ -123,13 +199,65 @@ public class TeamPropDetector implements VisionProcessor {
                             float scaleCanvasDensity,
                             Object userContext) {
 
+        // Draw the regions of interest
+        Paint rectPaint = new Paint();
+        rectPaint.setStyle(Paint.Style.STROKE);
+        rectPaint.setStrokeWidth(scaleCanvasDensity * 4);
+        rectPaint.setColor(Color.WHITE);
+
+        if (this.region1Rect != null) {
+            canvas.drawRect(makeGraphicsRect(this.region1Rect, scaleBmpPxToCanvasPx), rectPaint);
+        }
+        if (this.region2Rect != null) {
+            canvas.drawRect(makeGraphicsRect(this.region2Rect, scaleBmpPxToCanvasPx), rectPaint);
+        }
+        if (this.region3Rect != null) {
+            canvas.drawRect(makeGraphicsRect(this.region3Rect, scaleBmpPxToCanvasPx), rectPaint);
+        }
+
+        if (this.foundContours != null) {
+
+            for (ContourInfo contourInfo : foundContours) {
+                int xOffset = (contourInfo.region - 1) * regionWidth;
+                int yOffset = regionStartHeight;
+
+                // Get the bounding box
+                MatOfPoint contour = new MatOfPoint();
+                contourInfo.contour.convertTo(contour, CvType.CV_32S);
+                Rect boundingRect = Imgproc.boundingRect(contour);
+
+                // Offset the rect based on the region
+                boundingRect.x += xOffset;
+                boundingRect.y += yOffset;
+
+                // Set paint color based on the team color
+                if (contourInfo.color == TeamPropColor.BLUE) {
+                    rectPaint.setColor(Color.BLUE);
+                } else if (contourInfo.color == TeamPropColor.RED) {
+                    rectPaint.setColor(Color.RED);
+                }
+
+                canvas.drawRect(makeGraphicsRect(boundingRect, scaleBmpPxToCanvasPx), rectPaint);
+            }
+        }
+
+        this.ready = true;
     }
 
-    public boolean guessed() {
+    private android.graphics.Rect makeGraphicsRect(Rect rect, float scaleBmpPxToCanvasPx) {
+        int left = Math.round(rect.x * scaleBmpPxToCanvasPx);
+        int top = Math.round(rect.y * scaleBmpPxToCanvasPx);
+        int right = left + Math.round(rect.width * scaleBmpPxToCanvasPx);
+        int bottom = top + Math.round(rect.height * scaleBmpPxToCanvasPx);
+
+        return new android.graphics.Rect(left, top, right, bottom);
+    }
+
+    public boolean isGuessed() {
         return this.guessed;
     }
 
-    public int getColorGuess() {
+    public TeamPropColor getColorGuess() {
         return this.colorGuess;
     }
 
@@ -138,17 +266,13 @@ public class TeamPropDetector implements VisionProcessor {
     }
 
     public void enable() {
+        Log.d(TAG, "Enabling TeamPropDetector");
         this.enabled = true;
     }
+
     public void disable() {
+        Log.d(TAG, "Disabling TeamPropDetector");
         this.enabled = false;
     }
 
-    public int getNumberOfCalls() {
-        return this.calls;
-    }
-
-    public double getLargestAreaFound() {
-        return this.largestAreaFound;
-    }
 }
