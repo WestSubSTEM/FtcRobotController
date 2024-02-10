@@ -104,6 +104,7 @@ public class TeamPropDetector implements VisionProcessor {
         contours = null;
         hierarchy = null;
 
+        /*
         // Check the ratio of the largest contour
         Rect rect = Imgproc.boundingRect(largestContour);
         if (rect.height / rect.width > 0.75 || rect.width / rect.height > 0.75) {
@@ -113,6 +114,9 @@ public class TeamPropDetector implements VisionProcessor {
             // Likely a spike mark
             return null;
         }
+         */
+
+        return largestContour;
     }
 
     public void guessProp(Mat image) {
