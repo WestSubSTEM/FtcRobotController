@@ -51,6 +51,9 @@ public class Meet4Auto extends OpMode {
     int regionGuess;
     STEMperFiConstants.TeamPropColor colorGuess;
 
+    // If far is true, then robot starts further from the backstage
+    boolean far = true;
+    boolean parkLeft = true;
 
     /*
      * Code to run ONCE when the driver hits INIT
@@ -155,21 +158,31 @@ public class Meet4Auto extends OpMode {
 
             case 1:
 
+                telemetry.addLine("Moving to spike mark then backstage");
                 telemetry.addData("Color Guess", this.colorGuess);
                 telemetry.addData("Region Guess", this.regionGuess);
-                telemetry.addLine("Moving to spike mark then backstage");
-                // Move to the spike mark and then the backstage
-                moveToSpikeMark(this.regionGuess);
+                // Move to the spike mark and back up to base position
+                moveToSpikeMark();
                 state = 2;
                 break;
-                
-            case 2:
-                
-                telemetry.addLine("Score");
-                // TODO Move to the back stage
 
+            case 2:
+
+                telemetry.addLine("Placing pixel on score board");
+                telemetry.addData("Color Guess", this.colorGuess);
+                telemetry.addData("Region Guess", this.regionGuess);
+                // TODO Score
+                score();
+                state = 4;
                 break;
 
+            case 3:
+
+                telemetry.addLine("Park");
+                telemetry.addData("Color Guess", this.colorGuess);
+                telemetry.addData("Region Guess", this.regionGuess);
+                // TODO Score
+                park();
 
             default:
                 telemetry.addLine("Unknown state");
@@ -177,28 +190,212 @@ public class Meet4Auto extends OpMode {
 
     }
 
-    private void moveToSpikeMark(int region) {
-        switch (region) {
-            case 1:
-                left();
-                //moveForwardY(-19.2,.4,0);
-                moveForwardY(-68, .4, 0);
+    /*
+    Need to move to the spike mark based on 3 variables:
+    - this.colorGuess for the color of the team prop
+    - this.regionGuess for the location of the spike mark (1 is to the left of the robot)
+    - this.far for whether the robot is starting in further from the backstage (vs. near)
+
+    After moving to the spike mark, the robot should back up a bit to release the pixel
+    and then move to the starting spot of the backstage to prepare for the score function.
+     */
+    private void moveToSpikeMark() {
+
+        switch (this.colorGuess) {
+            case BLUE:
+                switch (this.regionGuess) {
+                    case 1:
+                        moveLeftBlueSpikeMark();
+                        break;
+                    case 2:
+                        moveCenterBlueSpikeMark();
+                        break;
+                    case 3:
+                        if (this.far) {
+                            moveRightBlueFarSpikeMark();
+                        } else {
+                            moveRightBlueNearSpikeMark();
+                        }
+                        break;
+                }
                 break;
-            case 2:
-                center();
-                //moveForwardY(-19.2,.4,0);
-                moveForwardY(-68, .4, 0);
-                break;
-            case 3:
-                rightFar();
-                //moveForwardY(-19.2,.4,0);
-                moveForwardY(-68, .4, 0);
+
+            case RED:
+                switch (this.regionGuess) {
+                    case 1:
+                        if (this.far) {
+                            moveLeftRedFarSpikeMark();
+                        } else {
+                            moveLeftRedNearSpikeMark();
+                        }
+                        break;
+                    case 2:
+                        moveCenterRedSpikeMark();
+                        break;
+                    case 3:
+                        moveRightRedSpikeMark();
+                        break;
+                }
                 break;
         }
+
+    }
+
+    /*------------------------------------
+    FUNCTIONS FOR MOVING TO THE SPIKE MARK
+    ------------------------------------*/
+
+    private void moveLeftBlueSpikeMark() {
+        moveForwardX(-13, .3, 0);
+        turn(30, .2, 0);
+        moveDiagonal(-5.7, 30, .3);
+        sleep(500);
+        moveDiagonalBackwards(11.5, 30, -.3);
+        sleep(500);
+        turn(93, .3, 0);
+    }
+    private void moveCenterBlueSpikeMark() {
+        moveForwardX(-26, .3, 500);
+        moveBackwardsX(-5, -.3, 0);
+        turn(94, .2, 0);
+    }
+
+    private void moveRightBlueFarSpikeMark() {
+        moveAndTurn(-20, .3, -.1, 0);
+        sleep(500);
+        moveAndBackwards(-2, -.3, .1, 0);
+        moveForwardX(-4, .2, 0);
+        turn(94, .2, 0);
+    }
+
+    private void moveRightBlueNearSpikeMark() {
+
+    }
+
+    private void moveLeftRedFarSpikeMark() {
+
+    }
+
+    private void moveLeftRedNearSpikeMark() {
+
+    }
+
+    private void moveCenterRedSpikeMark() {
+
+    }
+
+    private void moveRightRedSpikeMark() {
+
     }
 
 
-    public void moveAndBackwards(double dist, double speed, double turnSpeed, int delay) {
+    /*-------------------------------------
+    FUNCTIONS FOR SCORING ON THE BACK STAGE
+    -------------------------------------*/
+    private void score() {
+
+        // Move to the correct location
+        switch (this.colorGuess) {
+            case BLUE:
+                switch (this.regionGuess) {
+                    case 1:
+                        moveLeftBlueScore();
+                        break;
+                    case 2:
+                        moveCenterBlueScore();
+                        break;
+                    case 3:
+                        moveRightBlueScore();
+                        break;
+                }
+                break;
+            case RED:
+                switch (this.regionGuess) {
+                    case 1:
+                        moveLeftRedScore();
+                        break;
+                    case 2:
+                        moveCenterRedScore();
+                        break;
+                    case 3:
+                        moveRightRedScore();
+                        break;
+                }
+                break;
+        }
+
+        // Raise the arm and place the pixel
+        // TODO
+
+
+    }
+
+    private void moveLeftBlueScore() {
+        // TODO
+    }
+
+    private void moveCenterBlueScore() {
+        // TODO
+    }
+
+    private void moveRightBlueScore() {
+        // TODO
+    }
+
+    private void moveLeftRedScore() {
+        // TODO
+    }
+
+    private void moveCenterRedScore() {
+        // TODO
+    }
+
+    private void moveRightRedScore() {
+        // TODO
+    }
+
+    /*------------------------------------
+    FUNCTIONS FOR PARKING IN THE BACK AREA
+    ------------------------------------*/
+
+    /*
+    Parking is the same for red and blue sides. It will vary based on the region and whether
+    we are choosing to park to the right or left of the back drop.
+     */
+    private void park() {
+
+        switch (this.regionGuess) {
+            case 1:
+                if (this.parkLeft) {
+                    // Strafe to the left a little
+                } else {
+                    // Strafe to the right a lot
+                }
+                break;
+            case 2:
+                if (this.parkLeft) {
+                    // Strafe to the left somewhat
+                } else {
+                    // Strafe to the right somewhat
+                }
+                break;
+            case 3:
+                if (this.parkLeft) {
+                    // Strafe to the left a lot
+                } else {
+                    // Strafe to the right a little
+                }
+                break;
+
+        }
+
+    }
+
+    /*--------------
+    HELPER FUNCTIONS
+    --------------*/
+
+    private void moveAndBackwards(double dist, double speed, double turnSpeed, int delay) {
         mecanumDrive.driveRobotCentric(0, speed, turnSpeed, false);
         do {
             odometry.updatePose();
@@ -210,7 +407,7 @@ public class Meet4Auto extends OpMode {
         sleep(delay);
     }
 
-    public void moveAndTurn(double dist, double speed, double turnSpeed, int delay) {
+    private void moveAndTurn(double dist, double speed, double turnSpeed, int delay) {
         mecanumDrive.driveRobotCentric(0, speed, turnSpeed, false);
         do {
             odometry.updatePose();
@@ -222,7 +419,7 @@ public class Meet4Auto extends OpMode {
         sleep(delay);
     }
 
-    public void moveBackwardsY(double dist, double speed, int delay) {
+    private void moveBackwardsY(double dist, double speed, int delay) {
         mecanumDrive.driveRobotCentric(0, speed, 0, false);
         do {
             odometry.updatePose();
@@ -234,7 +431,7 @@ public class Meet4Auto extends OpMode {
         sleep(delay);
     }
 
-    public void moveForwardY(double dist, double speed, int delay) {
+    private void moveForwardY(double dist, double speed, int delay) {
         mecanumDrive.driveRobotCentric(0, speed, 0, false);
         do {
             odometry.updatePose();
@@ -246,7 +443,7 @@ public class Meet4Auto extends OpMode {
         sleep(delay);
     }
 
-    public void moveBackwardsX(double dist, double speed, int delay) {
+    private void moveBackwardsX(double dist, double speed, int delay) {
         mecanumDrive.driveRobotCentric(0, speed, 0, false);
         do {
 
@@ -259,7 +456,7 @@ public class Meet4Auto extends OpMode {
         sleep(delay);
     }
 
-    public void moveForwardX(double dist, double speed, int delay) {
+    private void moveForwardX(double dist, double speed, int delay) {
         mecanumDrive.driveRobotCentric(0, speed, 0, false);
         do {
 
@@ -272,7 +469,7 @@ public class Meet4Auto extends OpMode {
         sleep(delay);
     }
 
-    public void turnRight(int angle, double speed, int delay) {
+    private void turnRight(int angle, double speed, int delay) {
 
         mecanumDrive.driveRobotCentric(0, 0, speed, false);
         do {
@@ -286,7 +483,7 @@ public class Meet4Auto extends OpMode {
         sleep(delay);
     }
 
-    public void turn(int angle, double speed, int delay) {
+    private void turn(int angle, double speed, int delay) {
 
         mecanumDrive.driveRobotCentric(0, 0, speed, false);
         do {
@@ -300,43 +497,20 @@ public class Meet4Auto extends OpMode {
         sleep(delay);
     }
 
-    public void moveDiagonal(double hypotenuse, double angle, double speed) {
+    private void moveDiagonal(double hypotenuse, double angle, double speed) {
         moveForwardY(hypotenuse * Math.sin(angle * (Math.PI / 180)), speed, 0);
     }
 
-    public void moveDiagonalBackwards(double hypotenuse, double angle, double speed) {
+    private void moveDiagonalBackwards(double hypotenuse, double angle, double speed) {
         moveBackwardsY(hypotenuse * Math.sin(angle * (Math.PI / 180)), speed, 0);
     }
 
-    public void setArmHeight(int height) {
+    private void setArmHeight(int height) {
         motorLift.setTargetPosition(height);
     }
 
-    public void center() {
-        moveForwardX(-26, .3, 500);
-        moveBackwardsX(-5, -.3, 0);
-        turn(94, .2, 0);
-    }
 
-    public void rightFar() {
-        moveAndTurn(-20, .3, -.1, 0);
-        sleep(500);
-        moveAndBackwards(-2, -.3, .1, 0);
-        moveForwardX(-4, .2, 0);
-        turn(94, .2, 0);
-    }
-
-    public void left() {
-        moveForwardX(-13, .3, 0);
-        turn(30, .2, 0);
-        moveDiagonal(-5.7, 30, .3);
-        sleep(500);
-        moveDiagonalBackwards(11.5, 30, -.3);
-        sleep(500);
-        turn(93, .3, 0);
-    }
-
-    public void rightClose() {
+    private void rightClose() {
         moveForwardX(-20, .3, 0);
         turnRight(-60, -.2, 0);
         moveDiagonalBackwards(12, 30, .3);
