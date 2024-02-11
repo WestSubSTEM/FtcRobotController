@@ -33,25 +33,25 @@ public class STEMperFiConstants {
     public static final double DRONE_CLOSE = .44;
     public static final double DRONE_LAUNCH = .7;
 
-    public static final double PINCH_OPEN = 0.5;
-    public static final double PINCH_CLOSED = 0.79;
-    public static final double PINCH_CLOSED_WALL = 0.86;
+    public static final double PINCH_OPEN = 0.7;
+    public static final double PINCH_CLOSED = 0.2;
+    public static final double PINCH_CLOSED_WALL = 0.2;
 
-    public static final double PINCH_FLIP_INTAKE = 0.43; //0.39;
-    public static final double PINCH_FLIP_TRANSFER = 0.43; //0.39;
-    public static final double PINCH_FLIP_HANG = 0.13; //0.09;
+    public static final double PINCH_FLIP_INTAKE = 0.25; //0.43; //0.39;
+    public static final double PINCH_FLIP_TRANSFER = 0.25; //0.39;
+    public static final double PINCH_FLIP_HANG = 0.85; //0.13; //0.09;
 
-    public static final double PINCH_FLIP_BACKDROP = 0.2; //0.16;
+    public static final double PINCH_FLIP_BACKDROP = 0.4; //0.16;
 
     // vertical 0.11 &  0.71
-    public static final double PINCH_ROTATE_VERTICAL = .075;
+    public static final double PINCH_ROTATE_VERTICAL = .68;
 
     //  Horizontal 1.0 & .4
-    public static final double PINCH_ROTATE_HORIZONTAL = 0.41;
+    public static final double PINCH_ROTATE_HORIZONTAL = 0.36;
 
     // add sub .1 from horizontal
-    public static final double PINCH_ROTATE_LEFT = 0.55;
-    public static final double PINCH_ROTATE_RIGHT = 0.3 ;
+    public static final double PINCH_ROTATE_LEFT = 0.4;
+    public static final double PINCH_ROTATE_RIGHT = 0.2;
 
     public static final int LIFT_TARGET_MAX = 2000;
 
