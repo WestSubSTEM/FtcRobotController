@@ -198,6 +198,9 @@ public class Meet4Auto extends OpMode {
 
     After moving to the spike mark, the robot should back up a bit to release the pixel
     and then move to the starting spot of the backstage to prepare for the score function.
+
+    The starting spot of the backstage should be positioned in line with the back drop so
+    that the pixel can be placed in the first AprilTag slot.
      */
     private void moveToSpikeMark() {
 
@@ -246,6 +249,7 @@ public class Meet4Auto extends OpMode {
     ------------------------------------*/
 
     private void moveLeftBlueSpikeMark() {
+        // TODO Verify
         moveForwardX(-13, .3, 0);
         turn(30, .2, 0);
         moveDiagonal(-5.7, 30, .3);
@@ -255,12 +259,14 @@ public class Meet4Auto extends OpMode {
         turn(93, .3, 0);
     }
     private void moveCenterBlueSpikeMark() {
+        // TODO Verify
         moveForwardX(-26, .3, 500);
         moveBackwardsX(-5, -.3, 0);
         turn(94, .2, 0);
     }
 
     private void moveRightBlueFarSpikeMark() {
+        // TODO Verify
         moveAndTurn(-20, .3, -.1, 0);
         sleep(500);
         moveAndBackwards(-2, -.3, .1, 0);
@@ -269,23 +275,23 @@ public class Meet4Auto extends OpMode {
     }
 
     private void moveRightBlueNearSpikeMark() {
-
+        // TODO
     }
 
     private void moveLeftRedFarSpikeMark() {
-
+        // TODO
     }
 
     private void moveLeftRedNearSpikeMark() {
-
+        // TODO
     }
 
     private void moveCenterRedSpikeMark() {
-
+        // TODO
     }
 
     private void moveRightRedSpikeMark() {
-
+        // TODO
     }
 
 
@@ -368,22 +374,28 @@ public class Meet4Auto extends OpMode {
             case 1:
                 if (this.parkLeft) {
                     // Strafe to the left a little
+                    // TODO
                 } else {
                     // Strafe to the right a lot
+                    // TODO
                 }
                 break;
             case 2:
                 if (this.parkLeft) {
                     // Strafe to the left somewhat
+                    // TODO
                 } else {
                     // Strafe to the right somewhat
+                    // TODO
                 }
                 break;
             case 3:
                 if (this.parkLeft) {
                     // Strafe to the left a lot
+                    // TODO
                 } else {
                     // Strafe to the right a little
+                    // TODO
                 }
                 break;
 
