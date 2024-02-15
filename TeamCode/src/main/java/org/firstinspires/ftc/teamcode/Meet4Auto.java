@@ -304,13 +304,13 @@ public class Meet4Auto extends OpMode {
     private void moveRightBlueNearSpikeMark() {
         moveForwardX(-20,.3,0);
         turnRight(-60,-.2,0);
-        moveDiagonalBackwards(12,30,.3);
+        moveDiagonalBackwards(17,30,.3);
         sleep(500);
-        moveDiagonal(-7,30,-.3);
+        moveDiagonal(-14,30,-.3);
         turn(0,.2,0);
         moveBackwardsX(-6,-.3,500);
         turn(90,.2,0);
-        moveForwardY(-30, .4, 500);
+        moveForwardY(-31, .4, 500);
     }
 
     private void moveLeftRedFarSpikeMark() {
