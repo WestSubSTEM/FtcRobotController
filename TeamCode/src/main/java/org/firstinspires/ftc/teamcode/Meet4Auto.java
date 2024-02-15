@@ -147,12 +147,16 @@ public class Meet4Auto extends OpMode {
 
             case 0:
                 if (tpDetector.isGuessed()) {
+                    telemetry.addLine("Color and region has been guess");
 
                     this.colorGuess = tpDetector.getColorGuess();
                     this.regionGuess = tpDetector.getRegionGuess();
                     tpDetector.disable();
                     state = 1;
+                } else {
+                    telemetry.addLine("Guessing color and region");
                 }
+
                 sleep(200); // Polite pause to allow for interrupts
                 break;
 
