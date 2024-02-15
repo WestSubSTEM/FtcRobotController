@@ -197,7 +197,13 @@ public class TeamPropDetector implements VisionProcessor {
             // Set to block to prevent clobbering internal data, esp. while drawing
             this.ready = false;
             // Reset data
-            //this.reset();
+            // jcg: Removed this because of concurrency
+            // this.reset();
+            // vision processing    init loop
+            // reset - unknown      read value get unknown
+            // process              read value get unknown           If game starts here robot gets unknown values instead of last guess.
+            // process              read value get unknown
+            // zone 2 red           read value get zone 2 red
             guessProp(frame);
         }
 
