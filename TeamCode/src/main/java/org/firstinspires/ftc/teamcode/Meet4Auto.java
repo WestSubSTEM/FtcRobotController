@@ -132,12 +132,23 @@ public class Meet4Auto extends OpMode {
         ButtonReader buttonStateNext;
         buttonStateNext = new ButtonReader(liftOp, GamepadKeys.Button.DPAD_UP);
 
-        }
+    }
+
+    @Override
+    public void init_loop() {
+        telemetry.addLine("Guessing");
+        this.colorGuess = tpDetector.getColorGuess();
+        this.regionGuess = tpDetector.getRegionGuess();
+        telemetry.addData("Color Guess", this.colorGuess);
+        telemetry.addData("Region Guess", this.regionGuess);
+        telemetry.update();
+    }
 
 
-            @Override
+    @Override
     public void start() {
-        state = 0;
+        // Set this to 0 to guess at the start or 1 to bypass guessing
+        state = 1;
         colorGuess = STEMperFiConstants.TeamPropColor.UNKNOWN;
         regionGuess = 0;
         tpDetector.reset();
@@ -157,7 +168,6 @@ public class Meet4Auto extends OpMode {
 
                     this.colorGuess = tpDetector.getColorGuess();
                     this.regionGuess = tpDetector.getRegionGuess();
-                    tpDetector.disable();
                     state = 1;
                 } else {
                     telemetry.addLine("Guessing color and region");
@@ -167,6 +177,7 @@ public class Meet4Auto extends OpMode {
                 break;
 
             case 1:
+                tpDetector.disable();
 
                 telemetry.addLine("Moving to spike mark then backstage");
                 telemetry.addData("Color Guess", this.colorGuess);
