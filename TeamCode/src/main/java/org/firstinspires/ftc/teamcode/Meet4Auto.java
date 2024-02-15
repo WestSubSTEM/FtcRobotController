@@ -173,7 +173,7 @@ public class Meet4Auto extends OpMode {
                 telemetry.addData("Region Guess", this.regionGuess);
                 // TODO Score
                 score();
-                state = 4;
+                state = 3;
                 break;
 
             case 3:
@@ -254,24 +254,27 @@ public class Meet4Auto extends OpMode {
         turn(30, .2, 0);
         moveDiagonal(-5.7, 30, .3);
         sleep(500);
-        moveDiagonalBackwards(11.5, 30, -.3);
+        moveDiagonalBackwards(13, 30, -.3);
         sleep(500);
-        turn(93, .3, 0);
+        turn(90, .3, 0);
+        moveForwardY(-79, .4, 500);
     }
     private void moveCenterBlueSpikeMark() {
         // TODO Verify
-        moveForwardX(-26, .3, 500);
+        moveForwardX(-29, .3, 500);
         moveBackwardsX(-5, -.3, 0);
         turn(94, .2, 0);
+        moveForwardY(-76, .4, 500);
     }
 
     private void moveRightBlueFarSpikeMark() {
         // TODO Verify
-        moveAndTurn(-20, .3, -.1, 0);
+        moveAndTurn(-23, .3, -.1, 0);
         sleep(500);
         moveAndBackwards(-2, -.3, .1, 0);
         moveForwardX(-4, .2, 0);
-        turn(94, .2, 0);
+        turn(92, .2, 0);
+        moveForwardY(-76, .4, 500);
     }
 
     private void moveRightBlueNearSpikeMark() {
