@@ -106,7 +106,6 @@ public class Meet4Auto extends OpMode {
         leftOdometer.reset();
         rightOdometer.reset();
         centerOdometer.reset();
-        ;
 
         odometry = new HolonomicOdometry(
                 leftOdometer::getDistance,
@@ -126,11 +125,15 @@ public class Meet4Auto extends OpMode {
         vpBuilder.addProcessor(tpDetector);
         vpBuilder.setCameraResolution(new Size(640, 480));
         visionPortal = vpBuilder.build();
-        ButtonReader buttonLiftTop, buttonLiftLeft, buttonLiftRight, buttonLiftDown, buttonDroneLaunch;
+       /* ButtonReader buttonLiftTop, buttonLiftLeft, buttonLiftRight, buttonLiftDown, buttonDroneLaunch;
         buttonLiftRight = new ButtonReader(liftOp, GamepadKeys.Button.B);
         buttonLiftDown = new ButtonReader(liftOp, GamepadKeys.Button.A);
         ButtonReader buttonStateNext;
         buttonStateNext = new ButtonReader(liftOp, GamepadKeys.Button.DPAD_UP);
+*/
+        colorGuess = STEMperFiConstants.TeamPropColor.UNKNOWN;
+        regionGuess = 0;
+        tpDetector.reset();
 
     }
 
@@ -149,9 +152,6 @@ public class Meet4Auto extends OpMode {
     public void start() {
         // Set this to 0 to guess at the start or 1 to bypass guessing
         state = 1;
-        colorGuess = STEMperFiConstants.TeamPropColor.UNKNOWN;
-        regionGuess = 0;
-        tpDetector.reset();
     }
 
     @Override
@@ -285,7 +285,6 @@ public class Meet4Auto extends OpMode {
     ------------------------------------*/
 
     private void moveLeftBlueSpikeMark() {
-        // TODO Verify
         moveForwardX(-13, .3, 0);
         turn(30, .2, 0);
         moveDiagonal(-5.7, 30, .3);
@@ -295,7 +294,6 @@ public class Meet4Auto extends OpMode {
         turn(90, .3, 0);
     }
     private void moveCenterBlueSpikeMark() {
-        // TODO Verify
         moveForwardX(-29, .3, 500);
         moveBackwardsX(-5, -.3, 0);
         turn(91.5, .2, 0);
@@ -303,7 +301,6 @@ public class Meet4Auto extends OpMode {
     }
 
     private void moveRightBlueFarSpikeMark() {
-        // TODO Verify
         moveAndTurn(-23, .3, -.1, 0);
         sleep(500);
         moveAndBackwards(-2, -.3, .1, 0);
@@ -326,6 +323,13 @@ public class Meet4Auto extends OpMode {
 
     private void moveLeftRedFarSpikeMark() {
         // TODO
+        moveForwardX(-13, .3, 0);
+        turn(30, .2, 0);
+        moveDiagonal(-5.7, 30, .3);
+        sleep(500);
+        moveDiagonalBackwards(13, 30, -.3);
+        sleep(500);
+        turn(90, .3, 0);
     }
 
     private void moveLeftRedNearSpikeMark() {

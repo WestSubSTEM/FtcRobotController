@@ -96,7 +96,8 @@ public class TeamPropDetector implements VisionProcessor {
         if (largestContour != null) {
             // Check the ratio of the largest contour
             Rect rect = Imgproc.boundingRect(largestContour);
-            if (rect.height / rect.width > 0.75 || rect.width / rect.height > 0.75) {
+            double aspect = Math.max(rect.height / rect.width, rect.width / rect.height);
+            if (aspect < 1.15) {
                 // If the ratio is reasonably box-ish (i.e. not a spike mark)
                 return largestContour;
             } else {
@@ -196,7 +197,7 @@ public class TeamPropDetector implements VisionProcessor {
             // Set to block to prevent clobbering internal data, esp. while drawing
             this.ready = false;
             // Reset data
-            this.reset();
+            //this.reset();
             guessProp(frame);
         }
 
