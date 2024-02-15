@@ -52,7 +52,7 @@ public class Meet4Auto extends OpMode {
     STEMperFiConstants.TeamPropColor colorGuess;
 
     // If far is true, then robot starts further from the backstage
-    boolean far = true;
+    boolean far = false;
     boolean parkLeft = true;
 
     /*
@@ -126,10 +126,16 @@ public class Meet4Auto extends OpMode {
         vpBuilder.addProcessor(tpDetector);
         vpBuilder.setCameraResolution(new Size(640, 480));
         visionPortal = vpBuilder.build();
+        ButtonReader buttonLiftTop, buttonLiftLeft, buttonLiftRight, buttonLiftDown, buttonDroneLaunch;
+        buttonLiftRight = new ButtonReader(liftOp, GamepadKeys.Button.B);
+        buttonLiftDown = new ButtonReader(liftOp, GamepadKeys.Button.A);
+        ButtonReader buttonStateNext;
+        buttonStateNext = new ButtonReader(liftOp, GamepadKeys.Button.DPAD_UP);
 
-    }
+        }
 
-    @Override
+
+            @Override
     public void start() {
         state = 0;
         colorGuess = STEMperFiConstants.TeamPropColor.UNKNOWN;
@@ -208,10 +214,25 @@ public class Meet4Auto extends OpMode {
             case BLUE:
                 switch (this.regionGuess) {
                     case 1:
-                        moveLeftBlueSpikeMark();
+                        if(far) {
+                            moveLeftBlueSpikeMark();
+                            moveForwardY(-79, .4, 500);
+                        }
+                        else
+                        {
+                            moveLeftBlueSpikeMark();
+                            moveForwardY(-30,.4,0);
+                        }
                         break;
                     case 2:
-                        moveCenterBlueSpikeMark();
+                        if(far)
+                        {moveCenterBlueSpikeMark();
+                        moveForwardY(-78.5, .4, 500);}
+                        else
+                        {
+                            moveCenterBlueSpikeMark();
+                            moveForwardY(-30,.4,0);
+                        }
                         break;
                     case 3:
                         if (this.far) {
@@ -257,14 +278,13 @@ public class Meet4Auto extends OpMode {
         moveDiagonalBackwards(13, 30, -.3);
         sleep(500);
         turn(90, .3, 0);
-        moveForwardY(-79, .4, 500);
     }
     private void moveCenterBlueSpikeMark() {
         // TODO Verify
         moveForwardX(-29, .3, 500);
         moveBackwardsX(-5, -.3, 0);
-        turn(94, .2, 0);
-        moveForwardY(-76, .4, 500);
+        turn(91.5, .2, 0);
+
     }
 
     private void moveRightBlueFarSpikeMark() {
@@ -273,12 +293,20 @@ public class Meet4Auto extends OpMode {
         sleep(500);
         moveAndBackwards(-2, -.3, .1, 0);
         moveForwardX(-4, .2, 0);
-        turn(92, .2, 0);
-        moveForwardY(-76, .4, 500);
+        turn(91, .2, 0);
+        moveForwardY(-78, .4, 500);
     }
 
     private void moveRightBlueNearSpikeMark() {
-        // TODO
+        moveForwardX(-20,.3,0);
+        turnRight(-60,-.2,0);
+        moveDiagonalBackwards(12,30,.3);
+        sleep(500);
+        moveDiagonal(-7,30,-.3);
+        turn(0,.2,0);
+        moveBackwardsX(-6,-.3,500);
+        turn(90,.2,0);
+        moveForwardY(-30, .4, 500);
     }
 
     private void moveLeftRedFarSpikeMark() {
@@ -498,7 +526,7 @@ public class Meet4Auto extends OpMode {
         sleep(delay);
     }
 
-    private void turn(int angle, double speed, int delay) {
+    private void turn(double angle, double speed, int delay) {
 
         mecanumDrive.driveRobotCentric(0, 0, speed, false);
         do {
