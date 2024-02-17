@@ -236,15 +236,7 @@ public class Aidan_And_Adam extends LinearOpMode {
 
     public void score(int pos) {
 
-        //Robot Gets Aligned With The Backdrop
-        mecanumDrive.driveRobotCentric(0, 0, .3, false);
-        do {
-            odometry.updatePose();
-            telemetry.addData("x", odometry.getPose().getX());
-            telemetry.addData("y", odometry.getPose().getY());
-            telemetry.update();
-        } while (odometry.getPose().getRotation().getDegrees() < 90);
-        mecanumDrive.driveRobotCentric(0, 0, 0, false);
+
 
 
         //Robot Sets The Arm To Scoring Position
@@ -255,6 +247,7 @@ public class Aidan_And_Adam extends LinearOpMode {
         servoPixelRotate.setPosition(STEMperFiConstants.PINCH_ROTATE_VERTICAL);
 
         //Robot Moves Forward To Score
+            //moverForwardY();
         mecanumDrive.driveRobotCentric(0, .3, 0, false);
         do {
             odometry.updatePose();

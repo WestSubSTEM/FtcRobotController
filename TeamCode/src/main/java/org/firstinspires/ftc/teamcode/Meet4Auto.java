@@ -9,6 +9,7 @@ import com.arcrobotics.ftclib.gamepad.GamepadKeys;
 import com.arcrobotics.ftclib.gamepad.ToggleButtonReader;
 import com.arcrobotics.ftclib.hardware.motors.Motor;
 import com.arcrobotics.ftclib.kinematics.HolonomicOdometry;
+import com.qualcomm.hardware.rev.RevBlinkinLedDriver;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -40,7 +41,7 @@ public class Meet4Auto extends OpMode {
     double pixelRotatePosition = STEMperFiConstants.PINCH_ROTATE_VERTICAL;
     double pixelFlipPosition = STEMperFiConstants.PINCH_FLIP_INTAKE;
     MecanumDrive mecanumDrive;
-
+    private RevBlinkinLedDriver revBlinkinLedDriver;
     // Vision
 
     VisionPortal visionPortal;
@@ -60,15 +61,16 @@ public class Meet4Auto extends OpMode {
      */
     @Override
     public void init() {
-
+        revBlinkinLedDriver = hardwareMap.get(RevBlinkinLedDriver.class, "blink");
+        revBlinkinLedDriver.setPattern(RevBlinkinLedDriver.BlinkinPattern.WHITE);
         telemetry.addLine("Initializing motors and drive");
 
         motorLift = hardwareMap.get(DcMotorEx.class, "lift_c");
         motorLift.setDirection(DcMotorSimple.Direction.REVERSE);
         motorLift.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         motorLift.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-       // motorLift.setTargetPosition(STEMperFiConstants.LIFT_TARGET_INTAKE);
-       // motorLift.setPower(.4);
+        // motorLift.setTargetPosition(STEMperFiConstants.LIFT_TARGET_INTAKE);
+        // motorLift.setPower(.4);
         //motorLift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
         servoPixelRotate = hardwareMap.get(Servo.class, "rotate");
@@ -83,6 +85,7 @@ public class Meet4Auto extends OpMode {
         servoPixelLeft.setPosition(STEMperFiConstants.PINCH_CLOSED);
         servoPixelRight.setPosition(STEMperFiConstants.PINCH_CLOSED_WALL);
         // the extended gamepad object
+        sleep(500);
         motorLift.setTargetPosition(STEMperFiConstants.LIFT_TARGET_INTAKE);
         motorLift.setPower(.4);
         motorLift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
@@ -117,6 +120,11 @@ public class Meet4Auto extends OpMode {
                 TRACK_WIDTH, CENTER_WHEEL_OFFSET
         );
 
+
+        // TODO Move the lift (up and tilt a little)
+
+
+
         // TeamPropDetector processor
         telemetry.addLine("Initializing TeamPropDetector processor");
         tpDetector = new TeamPropDetector();
@@ -150,7 +158,7 @@ public class Meet4Auto extends OpMode {
         }
         telemetry.addLine("Guessing");
         STEMperFiConstants.TeamPropColor tempColorGuess = tpDetector.getColorGuess();
-        int tempRegionGuess =  tpDetector.getRegionGuess();
+        int tempRegionGuess = tpDetector.getRegionGuess();
         if (tempColorGuess != STEMperFiConstants.TeamPropColor.UNKNOWN) {
             this.colorGuess = tempColorGuess;
         }
@@ -179,6 +187,8 @@ public class Meet4Auto extends OpMode {
         switch (state) {
 
             case 0:
+                // NOTE: This state should no longer be used as we have moved the detection
+                //       routine to the init_loop function.
                 if (tpDetector.isGuessed()) {
                     telemetry.addLine("Color and region has been guess");
 
@@ -197,8 +207,15 @@ public class Meet4Auto extends OpMode {
 
                 telemetry.addLine("Moving to spike mark then backstage");
                 telemetry.addData("Color Guess", this.colorGuess);
+                if (this.colorGuess == STEMperFiConstants.TeamPropColor.RED) {
+                    revBlinkinLedDriver.setPattern(RevBlinkinLedDriver.BlinkinPattern.RAINBOW_LAVA_PALETTE);
+                } else if (this.colorGuess == STEMperFiConstants.TeamPropColor.BLUE) {
+                    revBlinkinLedDriver.setPattern(RevBlinkinLedDriver.BlinkinPattern.RAINBOW_OCEAN_PALETTE);
+                } else {
+                    revBlinkinLedDriver.setPattern(RevBlinkinLedDriver.BlinkinPattern.COLOR_WAVES_FOREST_PALETTE);
+                }
                 telemetry.addData("Region Guess", this.regionGuess);
-                // Move to the spike mark and back up to base position
+                // Move to the spike mark, back up, drive to backboard
                 moveToSpikeMark();
                 state = 2;
                 break;
@@ -208,7 +225,7 @@ public class Meet4Auto extends OpMode {
                 telemetry.addLine("Placing pixel on score board");
                 telemetry.addData("Color Guess", this.colorGuess);
                 telemetry.addData("Region Guess", this.regionGuess);
-                // TODO Score
+                // Line up with backboard and score
                 score();
                 state = 3;
                 break;
@@ -218,12 +235,18 @@ public class Meet4Auto extends OpMode {
                 telemetry.addLine("Park");
                 telemetry.addData("Color Guess", this.colorGuess);
                 telemetry.addData("Region Guess", this.regionGuess);
-                // TODO Score
-                park();
+                // Turn and move to wall
+                if (this.colorGuess == STEMperFiConstants.TeamPropColor.BLUE) {
+                    parkBlue();
+                } else {
+                    parkRed();
+                }
+                telemetry.addLine("Stopping.");
+                return;
 
 
             default:
-                telemetry.addLine("Unknown state");
+                telemetry.addLine("Unknown state. Exiting.");
         }
 
     }
@@ -246,26 +269,23 @@ public class Meet4Auto extends OpMode {
             case BLUE:
                 switch (this.regionGuess) {
                     case 1:
-                        if(far) {
+                        if (far) {
                             moveLeftBlueSpikeMark();
                             moveForwardY(-79, .4, 500);
 
 
-                        }
-                        else
-                        {
+                        } else {
                             moveLeftBlueSpikeMark();
-                            moveForwardY(-30,.4,0);
+                            moveForwardY(-30, .4, 0);
                         }
                         break;
                     case 2:
-                        if(far)
-                        {moveCenterBlueSpikeMark();
-                        moveForwardY(-78.5, .4, 500);}
-                        else
-                        {
+                        if (far) {
                             moveCenterBlueSpikeMark();
-                            moveForwardY(-30,.4,0);
+                            moveForwardY(-78.5, .4, 500);
+                        } else {
+                            moveCenterBlueSpikeMark();
+                            moveForwardY(-30, .4, 0);
                         }
                         break;
                     case 3:
@@ -283,15 +303,29 @@ public class Meet4Auto extends OpMode {
                     case 1:
                         if (this.far) {
                             moveLeftRedFarSpikeMark();
+                            moveBackwardsY(78.5, .4, 500);
                         } else {
                             moveLeftRedNearSpikeMark();
+                            moveBackwardsY(30, .4, 500);
                         }
                         break;
                     case 2:
+                        if (this.far) {
                             moveCenterRedSpikeMark();
+                            moveBackwardsY(78.5, .4, 500);
+                        } else {
+                            moveCenterRedSpikeMark();
+                            moveBackwardsY(30, .4, 500);
+                        }
                         break;
                     case 3:
-                        moveRightRedSpikeMark();
+                        if (this.far) {
+                            moveRightRedSpikeMark();
+                            moveBackwardsY(78.5, .4, 500);
+                        } else {
+                            moveRightRedNearSpikeMark();
+                            moveBackwardsY(30, .4, 500);
+                        }
 
                         break;
                 }
@@ -313,11 +347,11 @@ public class Meet4Auto extends OpMode {
         sleep(500);
         turn(90, .3, 0);
     }
+
     private void moveCenterBlueSpikeMark() {
         moveForwardX(-29, .3, 500);
         moveBackwardsX(-5, -.3, 0);
         turn(91.5, .2, 0);
-
     }
 
     private void moveRightBlueFarSpikeMark() {
@@ -330,19 +364,18 @@ public class Meet4Auto extends OpMode {
     }
 
     private void moveRightBlueNearSpikeMark() {
-        moveForwardX(-20,.3,0);
-        turnRight(-60,-.2,0);
-        moveDiagonalBackwards(17,30,.3);
+        moveForwardX(-20, .3, 0);
+        turnRight(-60, -.2, 0);
+        moveDiagonalBackwards(17, 30, .3);
         sleep(500);
-        moveDiagonal(-14,30,-.3);
-        turn(0,.2,0);
-        moveBackwardsX(-6,-.3,500);
-        turn(90,.2,0);
+        moveDiagonal(-14, 30, -.3);
+        turn(0, .2, 0);
+        moveBackwardsX(-6, -.3, 500);
+        turn(90, .2, 0);
         moveForwardY(-31, .4, 500);
     }
 
     private void moveLeftRedFarSpikeMark() {
-
         moveForwardX(-13, .3, 0);
         turn(30, .2, 0);
         moveDiagonal(-8, 30, .3);
@@ -350,41 +383,41 @@ public class Meet4Auto extends OpMode {
         moveDiagonalBackwards(15, 30, -.3);
         sleep(500);
         turnRight(-90, -.3, 0);
-
     }
 
     private void moveLeftRedNearSpikeMark() {
-        // TODO
         moveForwardX(-13, .3, 0);
         turn(30, .2, 0);
-        moveDiagonal(-5.7, 30, .3);
+        moveDiagonal(-4, 30, .3);
         sleep(500);
         moveDiagonalBackwards(13, 30, -.3);
         sleep(500);
         turnRight(-90, -.3, 0);
-
-
     }
 
     private void moveCenterRedSpikeMark() {
-        // TODO
         moveForwardX(-29, .3, 500);
         moveBackwardsX(-5, -.3, 0);
-        turnRight(-90, -.3, 0);
+        turnRight(-88, -.3, 0);
     }
 
     private void moveRightRedSpikeMark() {
-        // TODO
-        moveForwardX(-20,.3,0);
-        turnRight(-60,-.2,0);
-        moveDiagonalBackwards(17,30,.3);
+        moveForwardX(-20, .3, 0);
+        turnRight(-60, -.2, 0);
+        moveDiagonalBackwards(17, 30, .3);
         sleep(500);
-        moveDiagonal(-14,30,-.3);
-        turn(0,.2,0);
-        moveBackwardsX(-6,-.3,500);
-        turn(-90,-.2,0);
+        moveDiagonal(-16, 30, -.3);
+        turn(0, .2, 0);
+        moveBackwardsX(-6, -.3, 500);
+        turnRight(-90, -.2, 0);
+    }
 
-
+    private void moveRightRedNearSpikeMark() {
+        moveAndTurn(-23, .3, -.1, 0);
+        sleep(500);
+        moveAndBackwards(-2, -.3, .1, 0);
+        moveForwardX(-4, .2, 0);
+        turnRight(-90, -.2, 0);
     }
 
 
@@ -393,7 +426,7 @@ public class Meet4Auto extends OpMode {
     -------------------------------------*/
     private void score() {
 
-        // Move to the correct location
+        // Move to the correct location and score
         switch (this.colorGuess) {
             case BLUE:
                 switch (this.regionGuess) {
@@ -423,56 +456,66 @@ public class Meet4Auto extends OpMode {
                 break;
         }
 
-        // Raise the arm and place the pixel
-        // TODO
-
-
     }
 
     private void moveLeftBlueScore() {
-        // TODO
-        if(far)
-        {strafe(-15,.6);
-        Score(-89,0.2);}
-        else {
-            strafe(-15,.6);
-            Score(-40,0.2);
+        if (far) {
+            strafe(-15, .6);
+            score(-89, 0.2);
+        } else {
+            strafe(-15, .6);
+            score(-41.5, 0.2);
         }
     }
 
     private void moveCenterBlueScore() {
-        if(far)
-        {
-        strafe(-20.5,.6);
-        Score(-89,0.2);}
-        else
-        {
-            strafe(-20.5,.6);
-            Score(-40,0.2);
+        if (far) {
+            strafe(-20.5, .6);
+            score(-89, 0.2);
+        } else {
+            strafe(-20.5, .6);
+            score(-41, 0.2);
         }
     }
 
     private void moveRightBlueScore() {
-        if(far)
-        {strafe(-29,.6);
-        Score(-89.6,0.2);}
-         else
-        {
-            strafe(-29,.6);
-            Score(-41,0.2);
+        if (far) {
+            strafe(-29, .6);
+            score(-88.8, 0.2);
+        } else {
+            strafe(-29, .6);
+            score(-40.5, 0.2);
         }
     }
 
     private void moveLeftRedScore() {
-        // TODO
+        if (far) {
+            strafe(-29, -.6);
+            scoreRed(90, 0.2);
+        } else {
+            strafe(-29, -.6);
+            scoreRed(43.5, 0.2);
+        }
     }
 
     private void moveCenterRedScore() {
-        // TODO
+        if (far) {
+            strafe(-22, -.6);
+            scoreRed(90, 0.2);
+        } else {
+            strafe(-20, -.6);
+            scoreRed(43.5, 0.2);
+        }
     }
 
     private void moveRightRedScore() {
-        // TODO
+        if (far) {
+            strafe(-15, -.6);
+            scoreRed(90, 0.2);
+        } else {
+            strafe(-15, -.6);
+            scoreRed(43.5, 0.2);
+        }
     }
 
     /*------------------------------------
@@ -483,15 +526,16 @@ public class Meet4Auto extends OpMode {
     Parking is the same for red and blue sides. It will vary based on the region and whether
     we are choosing to park to the right or left of the back drop.
      */
-    private void park() {
+    private void parkBlue() {
 
         switch (this.regionGuess) {
             case 1:
                 if (this.parkLeft) {
+
                     // Strafe to the left a little
-                    turnRight(0,-.2,0);
+                    turnRight(0, -.2, 0);
                     mecanumDrive.driveRobotCentric(0, -.3, 0, false);
-                    sleep(1500);
+                    sleep(1_500);
                     mecanumDrive.driveRobotCentric(0, 0, 0, false);
                 } else {
                     // Strafe to the right a lot
@@ -501,9 +545,9 @@ public class Meet4Auto extends OpMode {
             case 2:
                 if (this.parkLeft) {
                     // Strafe to the left somewhat
-                    turnRight(0,-.2,0);
+                    turnRight(0, -.2, 0);
                     mecanumDrive.driveRobotCentric(0, -.3, 0, false);
-                    sleep(1499);
+                    sleep(1_500);
                     mecanumDrive.driveRobotCentric(0, 0, 0, false);
                 } else {
                     // Strafe to the right somewhat
@@ -512,12 +556,19 @@ public class Meet4Auto extends OpMode {
                 break;
             case 3:
                 if (this.parkLeft) {
-                    // Strafe to the left a lot
-                    turnRight(0,-.3,0);
-                    mecanumDrive.driveRobotCentric(0, -.5, 0, false);
-                    sleep(1200);
-                    mecanumDrive.driveRobotCentric(0, 0, 0, false);
-                    stop();
+                    if (far) {// Strafe to the left a lot
+                        turnRight(0, -.3, 0);
+                        mecanumDrive.driveRobotCentric(0, -.5, 0, false);
+                        sleep(1_200);
+                        mecanumDrive.driveRobotCentric(0, 0, 0, false);
+                        stop();
+                    } else {
+                        turnRight(0, -.3, 0);
+                        mecanumDrive.driveRobotCentric(0, -.4, 0, false);
+                        sleep(1_200);
+                        mecanumDrive.driveRobotCentric(0, 0, 0, false);
+                        stop();
+                    }
                 } else {
                     // Strafe to the right a little
                     // TODO
@@ -528,11 +579,55 @@ public class Meet4Auto extends OpMode {
 
     }
 
+    private void parkRed() {
+
+        switch (this.regionGuess) {
+            case 1:
+                if (this.parkLeft) {
+                    // Strafe ?
+                    turn(0, 3, 0);
+                    mecanumDrive.driveRobotCentric(0, -.4, 0, false);
+                    sleep(1_200);
+                    mecanumDrive.driveRobotCentric(0, 0, 0, false);
+                    stop();
+                } else {
+                    // Strafe ?
+                    // TODO
+                }
+                break;
+            case 2:
+                if (this.parkLeft) {
+                    // Strafe ?
+                    turn(0, 3, 0);
+                    mecanumDrive.driveRobotCentric(0, -.4, 0, false);
+                    sleep(800);
+                    mecanumDrive.driveRobotCentric(0, 0, 0, false);
+                    stop();
+                } else {
+                    // Strafe ?
+                    // TODO
+                }
+                break;
+            case 3:
+                if (this.parkLeft) {
+                    // Strafe ?
+                    turn(0, 3, 0);
+                    mecanumDrive.driveRobotCentric(0, -.4, 0, false);
+                    sleep(1_200);
+                    mecanumDrive.driveRobotCentric(0, 0, 0, false);
+                    stop();
+                } else {
+                    // Strafe ?
+                    // TODO
+                }
+                break;
+        }
+    }
+
     /*--------------
     HELPER FUNCTIONS
     --------------*/
-    private void Score(double dist, double speed)
-    {
+    private void scoreRed(double dist, double speed) {
 
         int yval = 0;
         //Robot Sets The Arm To Scoring Position
@@ -542,9 +637,10 @@ public class Meet4Auto extends OpMode {
         sleep(1000);
         servoPixelRotate.setPosition(STEMperFiConstants.PINCH_ROTATE_VERTICAL);
         sleep(1000);
-        turnRight(90,-.2,0);
+        turn(-90, .2, 0);
         //Robot Moves Forward To Score
-        moveForwardY(dist,speed,0);
+
+        moveBackwardsY(dist, speed, 0);
 
         //Robot Scores
         sleep(1000);
@@ -552,11 +648,49 @@ public class Meet4Auto extends OpMode {
         sleep(10);
         servoPixelRight.setPosition(STEMperFiConstants.PINCH_OPEN);
         sleep(1000);
-        if(far)
-        {
+        if (far) {
+            yval = 80;
+        } else
+            yval = 36;
+        //Robot Backs Up
+        mecanumDrive.driveRobotCentric(0, -.3, 0, false);
+        do {
+            odometry.updatePose();
+            telemetry.addData("x", odometry.getPose().getX());
+            telemetry.addData("y", odometry.getPose().getY());
+            telemetry.update();
+        } while (odometry.getPose().getY() > yval);
+        mecanumDrive.driveRobotCentric(0, 0, 0, false);
+        servoPixelFlip.setPosition(STEMperFiConstants.PINCH_FLIP_INTAKE);
+        sleep(1000);
+        motorLift.setTargetPosition(0);
+        sleep(1000);
+    }
+
+    private void score(double dist, double speed) {
+
+        int yval = 0;
+        //Robot Sets The Arm To Scoring Position
+        motorLift.setTargetPosition(STEMperFiConstants.AUTO_SCORE);
+        sleep(1000);
+        servoPixelFlip.setPosition(STEMperFiConstants.PINCH_FLIP_BACKDROP);
+        sleep(1000);
+        servoPixelRotate.setPosition(STEMperFiConstants.PINCH_ROTATE_VERTICAL);
+        sleep(1000);
+        turnRight(90, -.2, 0);
+        //Robot Moves Forward To Score
+
+        moveForwardY(dist, speed, 0);
+
+        //Robot Scores
+        sleep(1000);
+        servoPixelLeft.setPosition(STEMperFiConstants.PINCH_OPEN);
+        sleep(10);
+        servoPixelRight.setPosition(STEMperFiConstants.PINCH_OPEN);
+        sleep(1000);
+        if (far) {
             yval = -80;
-        }
-        else
+        } else
             yval = -36;
         //Robot Backs Up
         mecanumDrive.driveRobotCentric(0, -.3, 0, false);
@@ -572,8 +706,8 @@ public class Meet4Auto extends OpMode {
         motorLift.setTargetPosition(0);
         sleep(1000);
     }
-    private void strafe(double dist, double speed)
-    {
+
+    private void strafe(double dist, double speed) {
         mecanumDrive.driveRobotCentric(speed, 0, 0, false);
         do {
             odometry.updatePose();
@@ -583,8 +717,8 @@ public class Meet4Auto extends OpMode {
         } while (odometry.getPose().getX() > dist);
         mecanumDrive.driveRobotCentric(0, 0, 0, false);
     }
-    private void strafeLeft(double dist, double speed)
-    {
+
+    private void strafeLeft(double dist, double speed) {
         mecanumDrive.driveRobotCentric(speed, 0, 0, false);
         do {
             odometry.updatePose();
@@ -594,6 +728,7 @@ public class Meet4Auto extends OpMode {
         } while (odometry.getPose().getX() < dist);
         mecanumDrive.driveRobotCentric(0, 0, 0, false);
     }
+
     private void moveAndBackwards(double dist, double speed, double turnSpeed, int delay) {
         mecanumDrive.driveRobotCentric(0, speed, turnSpeed, false);
         do {

@@ -66,7 +66,7 @@ public class TeamPropDetector implements VisionProcessor {
 
     @Override
     public void init(int width, int height, CameraCalibration calibration) {
-        Log.d(TAG, "Initializing TeamPropDetector");
+        //Log.d(TAG, "Initializing TeamPropDetector");
         this.reset();
     }
 
@@ -172,7 +172,7 @@ public class TeamPropDetector implements VisionProcessor {
         }
 
         if (largestContourInfo != null) {
-            Log.d(TAG, "Largest contour: area " + largestContourInfo.area + " | color " + largestContourInfo.color + " region " + largestContourInfo.region);
+            //Log.d(TAG, "Largest contour: area " + largestContourInfo.area + " | color " + largestContourInfo.color + " region " + largestContourInfo.region);
             this.colorGuess = largestContourInfo.color;
             this.regionGuess = largestContourInfo.region;
             this.guessed = true;
@@ -197,13 +197,7 @@ public class TeamPropDetector implements VisionProcessor {
             // Set to block to prevent clobbering internal data, esp. while drawing
             this.ready = false;
             // Reset data
-            // jcg: Removed this because of concurrency
-            // this.reset();
-            // vision processing    init loop
-            // reset - unknown      read value get unknown
-            // process              read value get unknown           If game starts here robot gets unknown values instead of last guess.
-            // process              read value get unknown
-            // zone 2 red           read value get zone 2 red
+            this.reset();
             guessProp(frame);
         }
 
@@ -285,12 +279,12 @@ public class TeamPropDetector implements VisionProcessor {
     }
 
     public void enable() {
-        Log.d(TAG, "Enabling TeamPropDetector");
+        //Log.d(TAG, "Enabling TeamPropDetector");
         this.enabled = true;
     }
 
     public void disable() {
-        Log.d(TAG, "Disabling TeamPropDetector");
+        //Log.d(TAG, "Disabling TeamPropDetector");
         this.enabled = false;
     }
 

@@ -39,6 +39,7 @@ import com.arcrobotics.ftclib.gamepad.GamepadKeys;
 import com.arcrobotics.ftclib.hardware.motors.Motor;
 import com.arcrobotics.ftclib.kinematics.HolonomicOdometry;
 import com.arcrobotics.ftclib.util.MathUtils;
+import com.qualcomm.hardware.rev.RevBlinkinLedDriver;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -90,6 +91,7 @@ public class Meet2Tele extends OpMode {
     private HolonomicOdometry odometry;
 
     private QwiicLEDStrip ledStripFront;
+    private RevBlinkinLedDriver revBlinkinLedDriver;
 
     // Declare OpMode members.
     private ElapsedTime runtime = new ElapsedTime();
@@ -111,7 +113,7 @@ public class Meet2Tele extends OpMode {
     double pixelRotatePosition = STEMperFiConstants.PINCH_ROTATE_VERTICAL;
     double pixelFlipPosition = STEMperFiConstants.PINCH_FLIP_INTAKE;
 
-    STEMperFiConstants.STATE state = STEMperFiConstants.STATE.INTAKE;
+    STEMperFiConstants.STATE state = STEMperFiConstants.STATE.DRIVE_TO_HUMAN;
 
     ButtonReader buttonStateNext, buttonStatePrevious;
 
@@ -126,11 +128,13 @@ public class Meet2Tele extends OpMode {
      */
     @Override
     public void init() {
+        revBlinkinLedDriver = hardwareMap.get(RevBlinkinLedDriver.class, "blink");
         webCam = hardwareMap.get(WebcamName.class, "Webcam 1");
 
         ledStripFront = hardwareMap.get(QwiicLEDStrip.class, "led");
         ledStripFront.setBrightness(2);
         ledStripFront.setColor(STEMperFiConstants.COLOR_RED);
+        revBlinkinLedDriver.setPattern(RevBlinkinLedDriver.BlinkinPattern.BLACK);
 
         servoPixelRotate = hardwareMap.get(Servo.class, "rotate");
         servoPixelRotate.setPosition(pixelRotatePosition);
@@ -277,6 +281,12 @@ public class Meet2Tele extends OpMode {
     @Override
     public void start() {
         runtime.reset();
+        motorLift.setTargetPosition(STEMperFiConstants.LIFT_TARGET_PINCH);
+        state = STEMperFiConstants.STATE.DRIVE_TO_HUMAN;
+        stateRuntime.reset();
+        ledStripFront.setBrightness(2);
+        ledStripFront.setColor(STEMperFiConstants.COLOR_ORANGE);
+        revBlinkinLedDriver.setPattern(RevBlinkinLedDriver.BlinkinPattern.ORANGE);
     }
 
     /*
@@ -314,8 +324,13 @@ public class Meet2Tele extends OpMode {
 
         // launch drone
         buttonDroneLaunch.readValue();
-        if (buttonDroneLaunch.wasJustPressed()) {
+        if (gamepad1.a || gamepad1.b || gamepad1.x || gamepad1.y) {
             servoDrone.setPosition(STEMperFiConstants.DRONE_LAUNCH);
+        }
+        if (gamepad1.dpad_down || gamepad1.dpad_up || gamepad1.dpad_left || gamepad1.dpad_right) {
+            leftOdometer.reset();
+            rightOdometer.reset();
+            centerOdometer.reset();;
         }
 
         // read controls
@@ -389,11 +404,11 @@ public class Meet2Tele extends OpMode {
         servoPixelLeft.setPosition(STEMperFiConstants.PINCH_OPEN);
         servoPixelRight.setPosition(STEMperFiConstants.PINCH_OPEN);
         if (liftTriggerRight > 0.1 && !motorLift.isBusy()) {
-            // eject pixels
-            motorIntake.setPower(-STEMperFiConstants.INTAKE_SPEED * liftTriggerRight);
+            // spin intake in
+            motorIntake.setPower(-STEMperFiConstants.INTAKE_SPEED  * liftTriggerRight);
         } else if (liftTriggerLeft > 0.1 && !motorLift.isBusy()) {
             // spin intake in
-            motorIntake.setPower(STEMperFiConstants.INTAKE_SPEED * liftTriggerLeft);
+            motorIntake.setPower(STEMperFiConstants.INTAKE_SPEED / 2.0 * liftTriggerLeft);
         } else {
             // keep plate flat so pixels don't slide down
             motorIntake.setPower(0);
@@ -431,6 +446,7 @@ public class Meet2Tele extends OpMode {
         motorLift.setTargetPosition(STEMperFiConstants.LIFT_TARGET_PINCH);
         ledStripFront.setBrightness(2);
         ledStripFront.setColor(STEMperFiConstants.COLOR_GREEN);
+        revBlinkinLedDriver.setPattern(RevBlinkinLedDriver.BlinkinPattern.GREEN);
         pixelRotatePosition = STEMperFiConstants.PINCH_ROTATE_HORIZONTAL;
         state = STEMperFiConstants.STATE.PLACE_PIXEL;
     }
@@ -440,6 +456,7 @@ public class Meet2Tele extends OpMode {
             state = STEMperFiConstants.STATE.HANG;
             ledStripFront.setBrightness(2);
             ledStripFront.setColor(STEMperFiConstants.COLOR_PURPLE);
+            revBlinkinLedDriver.setPattern(RevBlinkinLedDriver.BlinkinPattern.VIOLET);
             pixelFlipPosition = STEMperFiConstants.PINCH_FLIP_HANG;
             pixelRotatePosition = STEMperFiConstants.PINCH_ROTATE_HORIZONTAL;
             stateRuntime.reset();
@@ -507,6 +524,7 @@ public class Meet2Tele extends OpMode {
                 stateRuntime.reset();
                 ledStripFront.setBrightness(2);
                 ledStripFront.setColor(STEMperFiConstants.COLOR_ORANGE);
+                revBlinkinLedDriver.setPattern(RevBlinkinLedDriver.BlinkinPattern.ORANGE);
             } else if (stateDuration > 250) {
                 // give robot half a second to rotate to vertical
                 pixelFlipPosition = STEMperFiConstants.PINCH_FLIP_INTAKE;
@@ -521,6 +539,7 @@ public class Meet2Tele extends OpMode {
             state = STEMperFiConstants.STATE.INTAKE;
             ledStripFront.setBrightness(2);
             ledStripFront.setColor(STEMperFiConstants.COLOR_RED);
+            revBlinkinLedDriver.setPattern(RevBlinkinLedDriver.BlinkinPattern.RED);
             motorLift.setTargetPosition(STEMperFiConstants.LIFT_TARGET_INTAKE);
             motorLift.setPower(.2);
             stateRuntime.reset();
