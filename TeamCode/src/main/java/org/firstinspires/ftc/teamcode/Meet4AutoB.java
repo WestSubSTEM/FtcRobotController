@@ -23,8 +23,8 @@ import org.firstinspires.ftc.vision.VisionPortal;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 
 
-@Autonomous(name = "Meet 4 Auto", group = "Meet 4")
-public class Meet4Auto extends OpMode {
+@Autonomous(name = "Meet 4 Auto Blue", group = "Meet 4")
+public class Meet4AutoB extends OpMode {
     public static final double TRACK_WIDTH = 15.375;
     public static final double CENTER_WHEEL_OFFSET = -5.375;
     public static final double WHEEL_DIAMETER = 1.89;
@@ -51,7 +51,6 @@ public class Meet4Auto extends OpMode {
     int state;
     int regionGuess;
     STEMperFiConstants.TeamPropColor colorGuess;
-    STEMperFiConstants.TeamPropColor colorSet;
 
     // If far is true, then robot starts further from the backstage
     boolean far = true;
@@ -62,8 +61,8 @@ public class Meet4Auto extends OpMode {
      */
     @Override
     public void init() {
-        revBlinkinLedDriver = hardwareMap.get(RevBlinkinLedDriver.class, "blink");
-        revBlinkinLedDriver.setPattern(RevBlinkinLedDriver.BlinkinPattern.WHITE);
+//        revBlinkinLedDriver = hardwareMap.get(RevBlinkinLedDriver.class, "blink");
+//        revBlinkinLedDriver.setPattern(RevBlinkinLedDriver.BlinkinPattern.WHITE);
         telemetry.addLine("Initializing motors and drive");
 
         motorLift = hardwareMap.get(DcMotorEx.class, "lift_c");
@@ -125,7 +124,6 @@ public class Meet4Auto extends OpMode {
         // TODO Move the lift (up and tilt a little)
 
 
-
         // TeamPropDetector processor
         telemetry.addLine("Initializing TeamPropDetector processor");
         tpDetector = new TeamPropDetector();
@@ -144,7 +142,6 @@ public class Meet4Auto extends OpMode {
         buttonStateNext = new ButtonReader(liftOp, GamepadKeys.Button.DPAD_UP);
 */
         colorGuess = STEMperFiConstants.TeamPropColor.UNKNOWN;
-        colorSet = STEMperFiConstants.TeamPropColor.UNKNOWN; // Nothing was set
         regionGuess = 0;
         tpDetector.reset();
 
@@ -154,25 +151,10 @@ public class Meet4Auto extends OpMode {
     public void init_loop() {
         if (gamepad1.x) {
             this.far = false;
-            telemetry.addLine("Set to near field");
         }
         if (gamepad1.triangle) {
             this.far = true;
-            telemetry.addLine("Set to far field");
         }
-/*
-        if (gamepad1.circle) {
-            tpDetector.setRedOnly();
-            this.colorSet = STEMperFiConstants.TeamPropColor.RED;
-            telemetry.addLine("Set to red only");
-        }
-
-        if (gamepad1.square) {
-            tpDetector.setBlueOnly();
-            this.colorSet = STEMperFiConstants.TeamPropColor.BLUE;
-            telemetry.addLine("Set to blue only");
-        }
-*/
         telemetry.addLine("Guessing");
         STEMperFiConstants.TeamPropColor tempColorGuess = tpDetector.getColorGuess();
         int tempRegionGuess = tpDetector.getRegionGuess();
@@ -193,11 +175,6 @@ public class Meet4Auto extends OpMode {
     public void start() {
         // Set this to 0 to guess at the start or 1 to bypass guessing
         state = 1;
-        // TODO Override
-        if (this.colorGuess != STEMperFiConstants.TeamPropColor.RED) {
-            this.colorGuess = STEMperFiConstants.TeamPropColor.RED;
-            this.regionGuess = 2;
-        }
     }
 
     @Override
@@ -205,13 +182,6 @@ public class Meet4Auto extends OpMode {
         //stopAndReset();
 
         telemetry.addData("State", state);
-        if (this.colorSet == STEMperFiConstants.TeamPropColor.RED) {
-            telemetry.addData("Color", "Red Only");
-        } else if (this.colorSet == STEMperFiConstants.TeamPropColor.BLUE) {
-            telemetry.addData("Color", "Blue Only");
-        } else {
-            telemetry.addData("Color", "Red and Blue");
-        }
 
         switch (state) {
 
@@ -294,75 +264,42 @@ public class Meet4Auto extends OpMode {
      */
     private void moveToSpikeMark() {
 
-        switch (this.colorGuess) {
-            case BLUE:
-                switch (this.regionGuess) {
-                    case 1:
-                        if (far) {
-                            moveLeftBlueSpikeMark();
-                            moveForwardY(-79, .4, 500);
+        switch (this.regionGuess) {
+            case 1:
+                if (far) {
+                    moveLeftBlueSpikeMark();
+                    moveForwardY(-79, .4, 500);
 
 
-                        } else {
-                            moveLeftBlueSpikeMark();
-                            moveForwardY(-30, .4, 0);
-                        }
-                        break;
-                    case 2:
-                        if (far) {
-                            moveCenterBlueSpikeMark();
-                            moveForwardY(-78.5, .4, 500);
-                        } else {
-                            moveCenterBlueSpikeMark();
-                            moveForwardY(-30, .4, 0);
-                        }
-                        break;
-                    case 3:
-                        if (this.far) {
-                            moveRightBlueFarSpikeMark();
-                        } else {
-                            moveRightBlueNearSpikeMark();
-                        }
-                        break;
+                } else {
+                    moveLeftBlueSpikeMark();
+                    moveForwardY(-30, .4, 0);
                 }
                 break;
-
-            case RED:
-                switch (this.regionGuess) {
-                    case 1:
-                        if (this.far) {
-                            moveLeftRedFarSpikeMark();
-                            sleep(3000);
-                            moveBackwardsY(78.5, .4, 500);
-                        } else {
-                            moveLeftRedNearSpikeMark();
-                            moveBackwardsY(30, .4, 500);
-                        }
-                        break;
-                    case 2:
-                        if (this.far) {
-                            moveCenterRedSpikeMark();
-                            moveBackwardsY(78.5, .4, 500);
-                        } else {
-                            moveCenterRedSpikeMark();
-                            moveBackwardsY(30, .4, 500);
-                        }
-                        break;
-                    case 3:
-                        if (this.far) {
-                            moveRightRedSpikeMark();
-                            moveBackwardsY(78.5, .4, 500);
-                        } else {
-                            moveRightRedNearSpikeMark();
-                            moveBackwardsY(30, .4, 500);
-                        }
-
-                        break;
+            case 2:
+                if (far) {
+                    moveCenterBlueSpikeMark();
+                    moveForwardY(-78.5, .4, 500);
+                } else {
+                    moveCenterBlueSpikeMark();
+                    moveForwardY(-30, .4, 0);
+                }
+                break;
+            case 3:
+                if (this.far) {
+                    moveRightBlueFarSpikeMark();
+                } else {
+                    moveRightBlueNearSpikeMark();
                 }
                 break;
         }
 
-    }
+
+}
+
+
+
+
 
     /*------------------------------------
     FUNCTIONS FOR MOVING TO THE SPIKE MARK
@@ -379,7 +316,7 @@ public class Meet4Auto extends OpMode {
     }
 
     private void moveCenterBlueSpikeMark() {
-        moveForwardX(-27, .3, 500);
+        moveForwardX(-29, .3, 500);
         moveBackwardsX(-5, -.3, 0);
         turn(91.5, .2, 0);
     }
@@ -470,20 +407,6 @@ public class Meet4Auto extends OpMode {
                         moveRightBlueScore();
                         break;
                 }
-                break;
-            case RED:
-                switch (this.regionGuess) {
-                    case 1:
-                        moveLeftRedScore();
-                        break;
-                    case 2:
-                        moveCenterRedScore();
-                        break;
-                    case 3:
-                        moveRightRedScore();
-                        break;
-                }
-                break;
         }
 
     }
@@ -531,20 +454,20 @@ public class Meet4Auto extends OpMode {
     private void moveCenterRedScore() {
         if (far) {
             strafe(-22, -.6);
-            scoreRed(88, 0.2);
+            scoreRed(89, 0.2);
         } else {
             strafe(-20, -.6);
-            scoreRed(42, 0.2);
+            scoreRed(43, 0.2);
         }
     }
 
     private void moveRightRedScore() {
         if (far) {
             strafe(-15, -.6);
-            scoreRed(88, 0.2);
+            scoreRed(89, 0.2);
         } else {
             strafe(-15, -.6);
-            scoreRed(42, 0.2);
+            scoreRed(43, 0.2);
         }
     }
 

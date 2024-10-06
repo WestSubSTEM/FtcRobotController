@@ -37,8 +37,8 @@ public class STEMperFiConstants {
     public static final double PINCH_CLOSED = 0.05;
     public static final double PINCH_CLOSED_WALL = 0.05;
 
-    public static final double PINCH_FLIP_INTAKE = 0.22; //0.43; //0.39;
-    public static final double PINCH_FLIP_TRANSFER = 0.22; //0.39;
+    public static final double PINCH_FLIP_INTAKE = 0.24; //0.22; //0.43; //0.39;
+    public static final double PINCH_FLIP_TRANSFER = 0.24; //0.22; //0.39;
     public static final double PINCH_FLIP_HANG = 0.85; //0.13; //0.09;
 
     public static final double PINCH_FLIP_BACKDROP = 0.62; //0.16;
